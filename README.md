@@ -28,7 +28,44 @@ This project is an intelligent email assistant built using NestJS, TypeScript, a
 
 ## Project Structure
 
-email-assistant/ ├── src/ │ ├── app/ │ │ ├── email/ # Email processing logic │ │ │ ├── message.module.ts # Email module │ │ │ ├── message.service.ts # Email processing service │ │ │ └── message.dto.ts # Email data transfer objects │ │ ├── llm/ # LLM integration │ │ │ ├── llm.module.ts # LLM module │ │ │ ├── llm.service.ts # LLM service (Groq integration) │ │ │ └── llm.dto.ts # LLM data transfer objects │ │ ├── sender/ # Sender management │ │ │ └── sender.service.ts # Sender service │ │ ├── ... │ ├── config/ │ │ └── database/ │ │ └── postgres.config.database.ts # Database configuration │ ├── entities/ # Database entities │ │ ├── email.entity.ts # Email entity │ │ └── email-sender.entity.ts # Sender entity │ ├── lib/ │ │ ├── entity/ │ │ │ └── entity.base.ts # Base entity class │ │ └── constants/ │ │ ├── index.ts # Constants index │ │ └── placeholders.ts # Placeholder constants │ ├── app.controller.ts # Main controller │ ├── app.module.ts # Main module │ ├── app.service.ts # Main service │ ├── main.ts # Entry point │ └── ... ├── test/ # End-to-end tests │ └── app.e2e-spec.ts ├── .env # Environment variables ├── .gitignore # Git ignore file ├── package.json # Project dependencies ├── tsconfig.json # TypeScript configuration └── ...
+email-assistant/
+├── src/
+│ ├── app/
+│ │ ├── message/ # Email processing logic
+│ │ │ ├── message.module.ts # Email module
+│ │ │ ├── message.service.ts # Email processing service
+│ │ │ └── message.dto.ts # Email data transfer objects
+│ │ ├── llm/ # LLM integration
+│ │ │ ├── llm.module.ts # LLM module
+│ │ │ ├── llm.service.ts # LLM service (Groq integration)
+│ │ │ └── llm.dto.ts # LLM data transfer objects
+│ │ ├── sender/ # Sender management
+│ │ │ └── sender.service.ts # Sender service
+│ │ ├── ... # Other app-specific modules (if any)
+│ │ ├── app.controller.ts # Main controller
+│ │ ├── app.module.ts # Main module
+│ │ └── app.service.ts # Main service
+│ ├── config/
+│ │ └── database/
+│ │ └── postgres.config.database.ts # Database configuration
+│ ├── entities/ # Database entities
+│ │ ├── message.entity.ts # Email message entity
+│ │ └── message-sender.entity.ts # Message sender entity
+│ ├── lib/
+│ │ ├── entity/
+│ │ │ └── entity.base.ts # Base entity class
+│ │ └── constants/
+│ │ ├── index.ts # Constants index
+│ │ └── placeholders.ts # Placeholder constants
+│ ├── main.ts # Entry point
+│ └── ... # Other files in src (if any)
+├── test/ # End-to-end tests
+│ └── app.e2e-spec.ts # End-to-end test file
+├── .env # Environment variables
+├── .gitignore # Git ignore file
+├── package.json # Project dependencies
+├── tsconfig.json # TypeScript configuration
+└── README.md # Project documentation
 
 ## Setup and Installation
 

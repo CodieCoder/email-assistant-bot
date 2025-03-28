@@ -1,6 +1,6 @@
 # Email Assistant - Intelligent Email Processing
 
-This project is an intelligent email assistant built using NestJS, TypeScript, and Groq's LLM API. It analyzes incoming emails, extracts key information, categorizes them, and provides insights based on the email content and the sender's history.
+This project is an intelligent email assistant built using NestJS, TypeScript, and Groq's LLM API. It analyzes incoming emails, extracts key information, categorizes them, run functions based on the analysis and provides insights based on the email content and the sender's history.
 
 ## Features
 

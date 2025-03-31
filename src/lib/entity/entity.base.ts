@@ -1,16 +1,26 @@
-import { CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity()
 export class EntityBase {
   @PrimaryGeneratedColumn('uuid')
   id?: string;
 
+  @Index()
   @CreateDateColumn()
   createdAt?: Date;
 
-  @CreateDateColumn()
+  @Index()
+  @UpdateDateColumn()
   updatedAt?: Date;
 
-  @CreateDateColumn()
+  @Index()
+  @DeleteDateColumn()
   deletedAt?: Date;
 }

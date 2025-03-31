@@ -1,1 +1,1 @@
-export * from './placeholders';
+export * from './tagReport';

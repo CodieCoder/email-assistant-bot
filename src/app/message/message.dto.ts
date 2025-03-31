@@ -1,20 +1,29 @@
+import { IsEmail, IsString } from 'class-validator';
 import { IAITagReportObject } from 'src/app/llm/llm.dto';
 
-export class EmailDto {
+export class EmailMessageDto {
+  @IsEmail()
   to: string;
-  subject: string;
-  messageId: string;
+
+  @IsEmail()
   sender: string;
+
+  @IsString()
+  subject: string;
+
+  @IsString()
+  emailId: string;
+
+  @IsString()
   content: string;
 }
 
 export interface ProcessedMessageDto {
-  messageId: string;
+  emailId: string;
   sender: string;
   summary: string;
   description: string;
-  tag: string[];
-  aiReport: IAITagReportObject;
+  tags: IAITagReportObject;
 }
 
 export interface IMessageContext {

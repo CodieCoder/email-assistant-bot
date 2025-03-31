@@ -134,11 +134,11 @@ email-assistant/
   - `analyzeEmail()`: Sends the email content and context to Groq for analysis.
   - `buildPrompt()`: Constructs the prompt for the LLM, including instructions and context.
   - `parseResponse()`: Parses the JSON response from Groq.
-- **`llm.dto.ts`:** Defines the data transfer objects for the LLM interaction, including `IAITagReport`, `ISentimentReport`, `IAITagReportObject`, and `LLMResponse`.
+- **`llm.dto.ts`:** Defines the data transfer objects for the LLM interaction, including `IAITagReport`, `ISentimentReport`, `IAITagReportObject`, and `ILLMResponse`.
 
 ### 2. Email Processing (`src/app/email/`)
 
-- **`message.module.ts`:** Defines the `EmailModule` for managing email processing.
+- **`message.module.ts`:** Defines the `MessageModule` for managing email processing.
 - **`message.service.ts`:**
   - `processNewEmail()`: Processes a new email, checks if it has already been processed, gets or creates the sender, builds the context, sends the email to the LLM for analysis, saves the results to the database, and runs post-processing tools.
   - `buildContext()`: Builds the context for the LLM, including the sender's summary and recent messages.

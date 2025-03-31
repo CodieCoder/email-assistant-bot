@@ -5,27 +5,54 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Groq from 'groq-sdk';
-import { LLMResponse } from 'src/app/llm/llm.dto';
+import { IAITagReport, ILLMResponse } from 'src/app/llm/llm.dto';
+import { EmailMessageDto, IMessageContext } from '../message';
+import {
+  EmailMessageTagDescriptionsEnum,
+  SenderTagDescriptionsEnum,
+} from 'src/lib/constants';
+import { TAISenderTagObject } from '../sender';
+import { CustomLoggerService } from 'src/lib/logger';
 
 @Injectable()
 class LLMService {
   private groqClient: Groq;
 
-  constructor(private readonly configService: ConfigService) {
-    this.groqClient = new Groq({
-      apiKey: this.configService.get<string>('GROQ_API_KEY'),
-    });
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly logger: CustomLoggerService,
+  ) {
+    const apiKey = this.configService.get<string>('GROQ_API_KEY');
+    if (!apiKey) {
+      throw new InternalServerErrorException('GROQ_API_KEY is not configured');
+    }
+
+    this.groqClient = new Groq({ apiKey });
   }
 
-  async analyzeEmail(content: string, context: any): Promise<LLMResponse> {
+  /**
+   * Analyzes an email using the LLM service.
+   * @param content - The email content to analyze.
+   * @param context - The context of the sender's history.
+   * @returns The LLM response as a structured object.
+   */
+  async analyzeEmail(
+    content: EmailMessageDto,
+    context: IMessageContext,
+  ): Promise<ILLMResponse> {
     try {
       const prompt = this.buildPrompt(content, context);
       const completion = await this.groqClient.chat.completions.create({
-        messages: [{ role: 'user', content: prompt }],
-        model: 'llama3-8b-8192',
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: this.getSystemPrompt() },
+          { role: 'user', content: prompt },
+        ],
+        // model: 'llama3-8b-8192',
+        model: 'deepseek-r1-distill-qwen-32b',
       });
 
-      const response = completion.choices[0].message.content;
+      const response = completion.choices[0]?.message?.content;
 
       if (!response) {
         throw new InternalServerErrorException('No response from AI');
@@ -33,84 +60,121 @@ class LLMService {
 
       return this.parseResponse(response);
     } catch (error) {
-      console.error('Error during Groq API call:', error);
-      throw new InternalServerErrorException('Error during Groq API call');
+      const message = 'Error during Groq API call';
+      this.logger.error({
+        message,
+        context: this.analyzeEmail.name,
+        trace: error,
+      });
+      throw new InternalServerErrorException(message);
     }
   }
 
-  private buildPrompt(content: string, context: any): string {
+  /**
+   * Builds the prompt for the LLM service.
+   * @param content - The email content.
+   * @param context - The context of the sender's history.
+   * @returns The prompt as a string.
+   */
+  private buildPrompt(
+    content: EmailMessageDto,
+    context: IMessageContext,
+  ): string {
+    const recentMessages = context.recentMessages
+      ?.map(
+        ({ description, summary }) =>
+          `description: ${description}\nsummary: ${summary}`,
+      )
+      .join('\n');
+
     return `
       Analyze this email in the context of the sender's history:
       
-      Sender Summary: ${context.senderSummary}
-      Recent Messages: ${context.recentMessages.map((m) => m.content).join('\n')}
+      Sender Summary: ${context.senderSummary || 'No summary available'}
+      Recent Messages: ${recentMessages || 'No recent messages available'}
       
       Current Email Content:
-      ${content}
-      
-      Respond with a JSON object containing:
-      {
-        "summary": "Brief summary of email intent",
-        "description": "Detailed description of email content",
-        "aiReport": {
-          "purchase": {
-            "confidence": 0-10 scale,
-            "reason": Reason for the confidence
-          },
-          "payment": {
-            "confidence": 0-10 scale,
-            "reason": Reason for the confidence
-          },
-          },
-          "inquiry": {
-            "confidence": 0-10 scale,
-            "reason": Reason for the confidence
-          },
-          },
-          "complaint": {
-            "confidence": 0-10 scale,
-            "reason": Reason for the confidence
-          },
-          },
-          "newsletter": {
-            "confidence": 0-10 scale,
-            "reason": Reason for the confidence
-          },
-          },
-          "subscription": {
-            "confidence": 0-10 scale,
-            "reason": Reason for the confidence
-          },
-          },
-          "advertisement": {
-            "confidence": 0-10 scale,
-            "reason": Reason for the confidence
-          },
-          },
-          "other": {
-            "confidence": 0-10 scale,
-            "description": A short description of why it cannot be categorized,
-            "reason": Reason for the confidence
-          },
-        },
-        "sentiment": {
-            "overall": "positive/negative/neutral",
-            "score": -1 to 1,
-            "emotions": { ... }
-          }
-      }
+      ${content.content || 'No content available'}
+      Sender: ${content.sender || 'Unknown sender'}
+      Subject: ${content.subject || 'No subject provided'}
     `;
   }
 
-  private parseResponse(response: string): LLMResponse {
+  /**
+   * Parses the response from the LLM service.
+   * @param response - The raw JSON response as a string.
+   * @returns The parsed response as an object.
+   */
+  private parseResponse(response: string): ILLMResponse {
     try {
       return JSON.parse(response);
     } catch (error) {
-      throw new BadRequestException(error, {
-        cause: 'Invalid JSON response from AI',
-        description: 'Invalid JSON response from AI',
+      const message = 'Invalid JSON response from AI';
+      this.logger.error({
+        message,
+        context: this.analyzeEmail.name,
+        trace: error,
       });
+      throw new BadRequestException(message);
     }
+  }
+
+  private getSystemPrompt() {
+    const TagMetaDataDescription: IAITagReport = {
+      confidence: '0 - 10' as any,
+      reason: 'Reason for the confidence',
+    };
+
+    const tagDescriptions = Object.keys(SenderTagDescriptionsEnum).reduce(
+      (acc, key) => {
+        acc[key] = TagMetaDataDescription;
+        return acc;
+      },
+      {} as TAISenderTagObject,
+    );
+
+    const messageTags = Object.keys(EmailMessageTagDescriptionsEnum).reduce(
+      (acc, key) => {
+        acc[key] = TagMetaDataDescription;
+        return acc;
+      },
+      {} as TAISenderTagObject,
+    );
+
+    return `You are an advanced email analysis assistant. Your role is to analyze email content in the context of the sender's history and provide structured insights. Use the provided sender summary, recent messages, and email content to generate a detailed response.
+
+Your response must follow this JSON schema:
+{
+  "summary": "Brief summary of the email's intent",
+  "description": "Detailed description of the email's content",
+  "sentiment": {
+    "overall": "positive/negative/neutral",
+    "score": -1 to 1,
+    "emotions": {
+      "happiness": 0-1,
+      "sadness": 0-1,
+      "anger": 0-1,
+      "fear": 0-1,
+      "surprise": 0-1
+    }
+  },
+  "messageTags": ${JSON.stringify(messageTags)},
+  "company": {
+    "name": "Company Name",
+    "website": "Company's website",
+    "description": "Company Description",
+    "summary": "Company Summary",
+    "tags": ${JSON.stringify(tagDescriptions)}
+  },
+  "sender": {
+    "name": "Sender Name",
+    "description": "Sender Description",
+    "summary": "Sender Summary",
+    "tags":  ${JSON.stringify(tagDescriptions)}
+  }
+}
+
+Ensure your response is valid JSON and adheres to the schema. Be concise but thorough in your analysis. If any required information is missing, provide a placeholder value and explain why it is missing.`;
   }
 }
 

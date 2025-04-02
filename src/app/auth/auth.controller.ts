@@ -1,11 +1,4 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  HttpCode,
-  HttpStatus,
-  Post,
-} from '@nestjs/common';
+import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
   IUserAuthResponse,
@@ -14,13 +7,18 @@ import {
   UserLoginDto,
 } from '../user';
 import { Public } from './public';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller('auth')
-class AuthController {
+export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
   @Post('login')
+  @ApiOperation({ summary: 'User login' })
+  @ApiResponse({ status: 200, description: 'User successfully logged in.' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials.' })
   async login(@Body() userDto: UserLoginDto): Promise<IUserAuthResponse> {
     try {
       return await this.authService.login(userDto);
@@ -31,6 +29,9 @@ class AuthController {
 
   @Post('register')
   @Public()
+  @ApiOperation({ summary: 'User registration' })
+  @ApiResponse({ status: 201, description: 'User created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid input.' })
   async register(
     @Body() userDto: UserCreateDto,
   ): Promise<UserCreateResponseDto> {
@@ -43,5 +44,3 @@ class AuthController {
     }
   }
 }
-
-export default AuthController;

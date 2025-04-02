@@ -1,12 +1,12 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { SenderEntity } from 'src/app/sender';
-import { EntityBase } from 'src/lib/entity/entity.base';
+import { BaseEntity } from 'src/lib/entity/entity.base';
 import { IAITagReportObject } from 'src/app/llm/llm.dto';
 import { UserEntity } from '../user';
 import { CompanyEntity } from 'src/entities';
 
 @Entity()
-export class MessageEntity extends EntityBase {
+export class MessageEntity extends BaseEntity {
   @Column({ nullable: false })
   emailId: string;
 

@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import POSTGRES_DB_CONFIG from './config/database/postgres.config.database';
 import { ConfigModule } from '@nestjs/config';
-import UserModule from './app/user/user.module';
+import { UserModule } from './app/user';
 import SenderModule from './app/sender/sender.module';
 import { MessageModule } from './app/message/';
 import { AuthModule } from './app/auth';

@@ -5,22 +5,19 @@ import { UserService } from './user.service';
 import UsersController from './user.controller';
 import { CompanyEntity } from 'src/entities';
 import { LoggerModule } from 'src/lib/logger/logger.module';
+import {
+  EmailAccountController,
+  EmailAccountEntity,
+  EmailAccountService,
+} from '../accountConfig';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      UserEntity,
-      //   MessageEntity,
-      //   // SenderEntity,
-      CompanyEntity,
-    ]),
+    TypeOrmModule.forFeature([UserEntity, EmailAccountEntity, CompanyEntity]),
     LoggerModule,
   ],
-  providers: [UserService],
-  controllers: [UsersController],
+  providers: [UserService, EmailAccountService],
+  controllers: [UsersController, EmailAccountController],
   exports: [UserService, TypeOrmModule],
 })
-class UserModule {}
-// export class UserModule {}
-
-export default UserModule;
+export class UserModule {}

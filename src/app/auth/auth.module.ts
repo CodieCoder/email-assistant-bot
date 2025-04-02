@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from '../user';
 import { AuthService } from './auth.service';
-import AuthController from './auth.controller';
+import { AuthController } from './';
 import { UserService } from '../user';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { getEnvVar } from 'src/config/global';

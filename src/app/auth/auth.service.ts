@@ -47,7 +47,15 @@ export class AuthService {
     // Generate JWT access token
     const accessToken = await this.generateAccessToken(user.id, user.email);
 
-    const result = { user, accessToken };
+    const dtoUser: Partial<UserDto> = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      accountType: user.accountType,
+    };
+
+    const result = { user: dtoUser, accessToken };
 
     return result;
   }

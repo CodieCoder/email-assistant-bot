@@ -1,9 +1,11 @@
-import { EntityBase } from 'src/lib/entity/entity.base';
+import { BaseEntity } from 'src/lib/entity/entity.base';
 import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { MessageEntity } from '../message';
+import { UserAccountTypeEnum } from './user.dto';
+import { EmailAccountEntity } from '../accountConfig/email-account.entity';
 
 @Entity()
-export class UserEntity extends EntityBase {
+export class UserEntity extends BaseEntity {
   @Index()
   @Column({ unique: true, nullable: false })
   email: string;
@@ -12,7 +14,13 @@ export class UserEntity extends EntityBase {
   password: string;
 
   @Column({ nullable: false })
-  name: string;
+  firstName: string;
+
+  @Column({ type: 'enum', enum: UserAccountTypeEnum, nullable: false })
+  accountType: UserAccountTypeEnum;
+
+  @Column({ nullable: false })
+  lastName: string;
 
   @Column({ nullable: true })
   summary: string;
@@ -25,6 +33,9 @@ export class UserEntity extends EntityBase {
 
   @Column({ nullable: true })
   verificationToken: string;
+
+  @OneToMany(() => EmailAccountEntity, (emailConfig) => emailConfig.user)
+  emailConfigs: EmailAccountEntity[];
 
   @OneToMany(() => MessageEntity, (message) => message.user, { cascade: true })
   messages: MessageEntity[];

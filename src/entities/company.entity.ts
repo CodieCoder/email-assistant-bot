@@ -1,10 +1,10 @@
-import { EntityBase } from 'src/lib/entity/entity.base';
+import { BaseEntity } from 'src/lib/entity/entity.base';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { MessageEntity } from 'src/app/message';
 import { TAISenderTagObject } from 'src/app/sender';
 
 @Entity()
-export class CompanyEntity extends EntityBase {
+export class CompanyEntity extends BaseEntity {
   @Column({ nullable: true })
   name: string;
 

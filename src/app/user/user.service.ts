@@ -94,10 +94,7 @@ export class UserService {
       return userDetails as UserDto;
     } catch (error) {
       const message = 'Error verifying user.';
-      this.logger.error({
-        message,
-        context: this.verifyUserWithEmailAndPassword.name,
-      });
+      this.logger.error({ message });
       throw new UnauthorizedException({ message });
     }
   }

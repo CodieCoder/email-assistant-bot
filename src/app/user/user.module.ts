@@ -9,7 +9,7 @@ import {
   EmailAccountController,
   EmailAccountEntity,
   EmailAccountService,
-} from '../accountConfig';
+} from '../emailAccount';
 
 @Module({
   imports: [

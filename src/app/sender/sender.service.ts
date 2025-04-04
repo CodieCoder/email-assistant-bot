@@ -30,6 +30,18 @@ class SenderService {
       });
     }
   }
+
+  public async updateSender(sender: SenderEntity) {
+    try {
+      const newSender = this.senderRepo.create(sender);
+      await this.senderRepo.save(newSender);
+    } catch (error) {
+      throw new BadRequestException(error, {
+        cause: this.updateSender.name,
+        description: 'Error updating sender',
+      });
+    }
+  }
 }
 
 export default SenderService;

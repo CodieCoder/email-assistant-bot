@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany } from 'typeorm';
-import { MessageEntity } from 'src/app/message';
+import { MessageEntity } from 'src/app/emailAnalyst';
 import { BaseEntity } from 'src/lib/entity/entity.base';
 import { TAISenderTagObject } from './sender.dto';
 

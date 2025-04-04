@@ -1,8 +1,8 @@
 import { BaseEntity } from 'src/lib/entity/entity.base';
 import { Column, Entity, Index, OneToMany } from 'typeorm';
-import { MessageEntity } from '../message';
+import { MessageEntity } from '../emailAnalyst';
 import { UserAccountTypeEnum } from './user.dto';
-import { EmailAccountEntity } from '../accountConfig/email-account.entity';
+import { EmailAccountEntity } from '../emailAccount/email-account.entity';
 
 @Entity()
 export class UserEntity extends BaseEntity {

@@ -7,17 +7,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SenderEntity } from 'src/app/sender';
-import {
-  MessageEntity,
-  EmailMessageDto,
-  IMessageContext,
-  ProcessedMessageDto,
-} from 'src/app/message';
+import { MessageEntity, IMessageContext } from 'src/app/emailAnalyst';
 import { IAICompanyObject } from 'src/app/llm/llm.dto';
 import SenderService from '../sender/sender.service';
 import LLMService from '../llm/llm.service';
 import { CompanyEntity } from 'src/entities';
 import { IJwtUserPayload, UserEntity, UserService } from '../user';
+import { EmailMessageDto, IProcessedEmailMessage } from 'src/lib/types';
 
 @Injectable()
 export class MessageService {
@@ -34,7 +30,7 @@ export class MessageService {
   async processNewEmail(
     email: EmailMessageDto,
     userInfo: IJwtUserPayload,
-  ): Promise<ProcessedMessageDto> {
+  ): Promise<IProcessedEmailMessage> {
     //validate user
     const user: UserEntity = await this.validateUser(userInfo.id);
 
@@ -59,15 +55,15 @@ export class MessageService {
     // Process sender
     const sender = await this.getOrCreateSender(email.sender);
 
+    const emailDomain = this.getEmailDomain(email.sender);
+    let company = await this.getOrCreateCompany(emailDomain);
+
     // Build context and analyze email
-    const context = await this.buildContext(sender);
+    const context = await this.buildContext(sender, company);
     const aiResponse = await this.llmService.analyzeEmail(email, context);
 
     // // Process company details
-    const company = await this.getCompanyDetails(
-      aiResponse.company,
-      email.sender,
-    );
+    company = await this.getCompanyDetails(aiResponse.company, emailDomain);
 
     // // Create and save the new message
     const newMessageRecord: Partial<MessageEntity> = {
@@ -102,7 +98,31 @@ export class MessageService {
     }
   }
 
-  private async buildContext(sender: SenderEntity): Promise<IMessageContext> {
+  private async getOrCreateCompany(
+    emailDomain: string,
+  ): Promise<CompanyEntity> {
+    try {
+      let company = await this.companyRepo.findOne({
+        where: { emailDomain },
+      });
+
+      if (!company) {
+        company = this.companyRepo.create({ emailDomain });
+        await this.companyRepo.save(company);
+      }
+
+      return company;
+    } catch (error) {
+      throw new BadRequestException(error, {
+        description: 'Error getting or creating company',
+      });
+    }
+  }
+
+  private async buildContext(
+    sender: SenderEntity,
+    company: CompanyEntity,
+  ): Promise<IMessageContext> {
     const recentMessages = await this.messageRepo.find({
       where: { sender: { id: sender.id } },
       order: { createdAt: 'DESC' },
@@ -110,11 +130,19 @@ export class MessageService {
     });
 
     const context: IMessageContext = {
-      senderSummary: sender.summary,
-      recentMessages: recentMessages.map(({ description, summary }) => ({
-        description,
-        summary,
-      })),
+      senderSummary:
+        sender.summary || sender.description
+          ? `${sender.summary ? `Sender Summary: ${sender.summary}` : ''} ${sender.description ? `\n Description:  ${sender.description}` : ''}`
+          : undefined,
+      companySummary: company.summary
+        ? `${company.summary ? `Company Summary: ${company.summary}` : ''} ${company.description ? `\n Description:  ${company.description}` : ''}`
+        : undefined,
+      recentMessages: recentMessages.length
+        ? recentMessages.map(({ description, summary }) => ({
+            description,
+            summary,
+          }))
+        : undefined,
     };
 
     return context;
@@ -122,9 +150,8 @@ export class MessageService {
 
   private async getCompanyDetails(
     data: IAICompanyObject,
-    emailAddress: string,
+    emailDomain: string,
   ): Promise<CompanyEntity> {
-    const emailDomain = emailAddress.split('@')[1];
     const newCompany: Partial<CompanyEntity> = {
       name: data.name || undefined,
       description: data.description || undefined,
@@ -140,7 +167,7 @@ export class MessageService {
       if (!company) {
         company = this.companyRepo.create(newCompany);
       } else {
-        Object.assign(company, newCompany);
+        company = Object.assign(company, newCompany);
       }
 
       return await this.companyRepo.save(company);
@@ -153,7 +180,7 @@ export class MessageService {
 
   private async formatResponse(
     message: MessageEntity,
-  ): Promise<ProcessedMessageDto> {
+  ): Promise<IProcessedEmailMessage> {
     if (!message) {
       throw new NotFoundException('Message not found');
     }
@@ -177,5 +204,13 @@ export class MessageService {
 
       return user;
     }
+  }
+
+  private getEmailDomain(email: string): string {
+    const emailParts = email.split('@');
+    if (emailParts.length !== 2) {
+      throw new BadRequestException('Invalid email format');
+    }
+    return emailParts[1];
   }
 }

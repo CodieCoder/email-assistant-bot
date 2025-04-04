@@ -6,7 +6,7 @@ import POSTGRES_DB_CONFIG from './config/database/postgres.config.database';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './app/user';
 import SenderModule from './app/sender/sender.module';
-import { MessageModule } from './app/message/';
+import { MessageModule } from './app/emailAnalyst';
 import { AuthModule } from './app/auth';
 import { CustomLoggerService, LoggingInterceptor } from './lib/logger';
 import { APP_INTERCEPTOR } from '@nestjs/core';

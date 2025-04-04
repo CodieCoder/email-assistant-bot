@@ -6,13 +6,14 @@ import {
 import { ConfigService } from '@nestjs/config';
 import Groq from 'groq-sdk';
 import { IAITagReport, ILLMResponse } from 'src/app/llm/llm.dto';
-import { EmailMessageDto, IMessageContext } from '../message';
+import { IMessageContext } from '../emailAnalyst';
 import {
   EmailMessageTagDescriptionsEnum,
   SenderTagDescriptionsEnum,
 } from 'src/lib/constants';
 import { TAISenderTagObject } from '../sender';
 import { CustomLoggerService } from 'src/lib/logger';
+import { EmailMessageDto } from 'src/lib/types';
 
 @Injectable()
 class LLMService {
@@ -83,15 +84,16 @@ class LLMService {
     const recentMessages = context.recentMessages
       ?.map(
         ({ description, summary }) =>
-          `description: ${description}\nsummary: ${summary}`,
+          `Description: ${description}\n Summary: ${summary}`,
       )
       .join('\n');
 
     return `
       Analyze this email in the context of the sender's history:
       
-      Sender Summary: ${context.senderSummary || 'No summary available'}
-      Recent Messages: ${recentMessages || 'No recent messages available'}
+      ${context.senderSummary ? `Sender Summary: ${context.senderSummary}` : ''}
+      ${context.companySummary ? `Company Summary: ${context.companySummary}` : ''}
+      ${recentMessages ? `\n Recent Messages: ${recentMessages}` : ''}
       
       Current Email Content:
       ${content.content || 'No content available'}

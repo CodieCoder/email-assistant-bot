@@ -1,7 +1,7 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import { Injectable } from '@nestjs/common';
-import { QueueNameEnum, QueueProcessEnum } from './queue.dto';
+import { QueueNameEnum, QueueProcessEnum } from './dtos/queue.dto';
 import { IProcessedEmailMessageQueue } from 'src/lib/types';
 
 /**

@@ -5,15 +5,15 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Groq from 'groq-sdk';
-import { IAITagReport, ILLMResponse } from 'src/app/llm/llm.dto';
-import { IMessageContext } from '../emailAnalyst';
+import { IAITagReport, ILLMResponse } from 'src/app/llm/dtos/llm.dto';
 import {
   EmailMessageTagDescriptionsEnum,
   SenderTagDescriptionsEnum,
 } from 'src/lib/constants';
-import { TAISenderTagObject } from '../sender';
-import { CustomLoggerService } from 'src/lib/logger';
 import { EmailMessageDto } from 'src/lib/types';
+import { CustomLoggerService } from '../../lib/logger/logger.service';
+import { IMessageContext } from '../emailAnalyst/dtos/message.dto';
+import { TAISenderTagObject } from '../sender/dtos/sender.dto';
 
 @Injectable()
 class LLMService {
@@ -21,7 +21,7 @@ class LLMService {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly logger: CustomLoggerService,
+    // private readonly logger: CustomLoggerService,
   ) {
     const apiKey = this.configService.get<string>('GROQ_API_KEY');
     if (!apiKey) {
@@ -62,7 +62,7 @@ class LLMService {
       return this.parseResponse(response);
     } catch (error) {
       const message = 'Error during Groq API call';
-      this.logger.error({
+      console.error({
         message,
         context: this.analyzeEmail.name,
         trace: error,
@@ -96,8 +96,8 @@ class LLMService {
       ${recentMessages ? `\n Recent Messages: ${recentMessages}` : ''}
       
       Current Email Content:
-      ${content.content || 'No content available'}
-      Sender: ${content.sender || 'Unknown sender'}
+      ${content.textAsHtml || 'No content available'}
+      Sender: ${!content.from ? 'unknown sender' : content.from.address ? 'email : ' + content.from.address : '' + content.from.address ? 'name : ' + content.from.name : ''}
       Subject: ${content.subject || 'No subject provided'}
     `;
   }
@@ -112,7 +112,7 @@ class LLMService {
       return JSON.parse(response);
     } catch (error) {
       const message = 'Invalid JSON response from AI';
-      this.logger.error({
+      console.error({
         message,
         context: this.analyzeEmail.name,
         trace: error,
@@ -143,7 +143,7 @@ class LLMService {
       {} as TAISenderTagObject,
     );
 
-    return `You are an advanced email analysis assistant. Your role is to analyze email content in the context of the sender's history and provide structured insights. Use the provided sender summary, recent messages, and email content to generate a detailed response.
+    return `You are an advanced email analysis assistant. Your role is to analyze email content in the context of the sender's history and provide structured insights as indicated in the provided JSON schema. Use the provided sender summary, recent messages, and email content to generate a detailed response.
 
 Your response must follow this JSON schema:
 {
@@ -176,7 +176,7 @@ Your response must follow this JSON schema:
   }
 }
 
-Ensure your response is valid JSON and adheres to the schema. Be concise but thorough in your analysis. If any required information is missing, provide a placeholder value and explain why it is missing.`;
+Ensure your response is valid JSON and adheres to the schema. Be concise but thorough in your analysis.`;
   }
 }
 

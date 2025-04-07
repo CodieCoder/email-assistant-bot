@@ -4,17 +4,18 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+
+import { getEnvVar } from 'src/config/global';
 import {
-  IUserAuthResponse,
   IJwtPayload,
+  IUserAuthResponse,
   UserCreatedDto,
   UserCreateDto,
   UserCreateResponseDto,
   UserDto,
   UserLoginDto,
-} from '../user';
-import { UserService } from '../user';
-import { getEnvVar } from 'src/config/global';
+} from '../user/dtos/user.dto';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AuthService {

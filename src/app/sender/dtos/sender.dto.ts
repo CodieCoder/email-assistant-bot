@@ -1,5 +1,5 @@
+import { IAITagReport } from 'src/app/llm/dtos/llm.dto';
 import { SenderTagDescriptionsEnum } from 'src/lib/constants';
-import { IAITagReport } from '../llm';
 
 export type TAISenderTagObject = {
   [key in keyof typeof SenderTagDescriptionsEnum]: IAITagReport;

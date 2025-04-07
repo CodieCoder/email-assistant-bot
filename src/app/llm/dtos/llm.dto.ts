@@ -1,4 +1,7 @@
-import { IAISenderObject, TAISenderTagObject } from '../sender';
+import {
+  IAISenderObject,
+  TAISenderTagObject,
+} from '../../sender/dtos/sender.dto';
 
 export interface IAITagReport {
   confidence: number;
@@ -26,6 +29,15 @@ export interface IAITagReportObject {
   newsletter: IAITagReport;
   subscription: IAITagReport;
   advertisement: IAITagReport;
+  supportRequest: IAITagReport;
+  feedback: IAITagReport;
+  urgent: IAITagReport;
+  followUp: IAITagReport;
+  internal: IAITagReport;
+  external: IAITagReport;
+  promotion: IAITagReport;
+  event: IAITagReport;
+  spam: IAITagReport;
   other: IAITagReport;
 }
 

@@ -6,14 +6,21 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SenderEntity } from 'src/app/sender';
-import { MessageEntity, IMessageContext } from 'src/app/emailAnalyst';
-import { IAICompanyObject } from 'src/app/llm/llm.dto';
+import { IAICompanyObject } from 'src/app/llm/dtos/llm.dto';
 import SenderService from '../sender/sender.service';
 import LLMService from '../llm/llm.service';
 import { CompanyEntity } from 'src/entities';
-import { IJwtUserPayload, UserEntity, UserService } from '../user';
-import { EmailMessageDto, IProcessedEmailMessage } from 'src/lib/types';
+import {
+  EmailMessageDto,
+  IEmailAddressWithName,
+  IProcessedEmailMessage,
+} from 'src/lib/types';
+import { MessageEntity } from './entities/message.entity';
+import { UserService } from '../user/user.service';
+import { IJwtUserPayload } from '../user/dtos/user.dto';
+import { UserEntity } from '../user/entities/user.entity';
+import { IMessageContext } from './dtos/message.dto';
+import { SenderEntity } from '../sender/entities/sender.entity';
 
 @Injectable()
 export class MessageService {
@@ -35,27 +42,27 @@ export class MessageService {
     const user: UserEntity = await this.validateUser(userInfo.id);
 
     // Validate emailId
-    if (!email.emailId) {
+    if (!email.messageId) {
       throw new BadRequestException('Email ID is required');
     }
 
     // Check if the message already exists
     const existingMessage = await this.messageRepo.findOne({
-      where: { emailId: email.emailId, userId: user.id },
+      where: { emailId: email.messageId, userId: user.id },
     });
 
     if (existingMessage) {
       // Return already processed message
       return this.formatResponse({
         ...existingMessage,
-        sender: { email: email.sender } as any,
+        sender: { email: email.from.name, name: email.from.name } as any,
       });
     }
 
     // Process sender
-    const sender = await this.getOrCreateSender(email.sender);
+    const sender = await this.getOrCreateSender(email.from);
 
-    const emailDomain = this.getEmailDomain(email.sender);
+    const emailDomain = this.getEmailDomain(email.from.address);
     let company = await this.getOrCreateCompany(emailDomain);
 
     // Build context and analyze email
@@ -67,7 +74,7 @@ export class MessageService {
 
     // // Create and save the new message
     const newMessageRecord: Partial<MessageEntity> = {
-      emailId: email.emailId,
+      emailId: email.messageId,
       subject: email.subject,
       summary: aiResponse.summary,
       description: aiResponse.description,
@@ -84,9 +91,11 @@ export class MessageService {
     return this.formatResponse(savedMessage);
   }
 
-  private async getOrCreateSender(email: string): Promise<SenderEntity> {
+  private async getOrCreateSender(
+    email: IEmailAddressWithName,
+  ): Promise<SenderEntity> {
     try {
-      const sender = await this.senderService.getOrCreateSender(email);
+      const sender = await this.senderService.getOrCreateSender(email.address);
       if (!sender?.id) {
         throw new Error('Sender not found');
       }
@@ -186,7 +195,10 @@ export class MessageService {
     }
     return {
       emailId: message.emailId,
-      sender: message.sender.email,
+      sender: {
+        address: message.sender.email,
+        name: message.sender.name || '',
+      },
       summary: message.summary,
       description: message.description,
       tags: message.tags,

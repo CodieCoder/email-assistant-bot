@@ -4,13 +4,18 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import POSTGRES_DB_CONFIG from './config/database/postgres.config.database';
 import { ConfigModule } from '@nestjs/config';
-import { UserModule } from './app/user';
 import SenderModule from './app/sender/sender.module';
-import { MessageModule } from './app/emailAnalyst';
-import { AuthModule } from './app/auth';
-import { CustomLoggerService, LoggingInterceptor } from './lib/logger';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { LoggerModule } from './lib/logger/logger.module';
+import { CustomLoggerModule } from './lib/logger/logger.module';
+import { CustomLoggerService } from './lib/logger/logger.service';
+import { MessageService } from './app/emailAnalyst/message.service';
+import { EmailAccountController } from './app/emailAccount/email-account.controller';
+import { EmailAccountModule } from './app/emailAccount/email-account.module';
+import { UserModule } from './app/user/user.module';
+import { AuthModule } from './app/auth/auth.module';
+import { MessageModule } from './app/emailAnalyst/message.module';
+import { EmailQueueModule } from './app/queue/queue.module';
+import { LoggingInterceptor } from './lib/logger/logging.interceptor';
 
 @Module({
   imports: [
@@ -24,11 +29,13 @@ import { LoggerModule } from './lib/logger/logger.module';
         return configObj;
       },
     }),
-    LoggerModule,
     UserModule,
     AuthModule,
     SenderModule,
     MessageModule,
+    EmailAccountModule,
+    CustomLoggerModule,
+    EmailQueueModule,
   ],
   controllers: [AppController],
   providers: [
@@ -42,6 +49,6 @@ import { LoggerModule } from './lib/logger/logger.module';
     },
     AppService,
   ],
-  exports: [CustomLoggerService],
+  exports: [],
 })
 export class AppModule {}

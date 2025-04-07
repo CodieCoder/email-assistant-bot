@@ -1,37 +1,34 @@
-// email-receiving.service.ts
 import { Injectable } from '@nestjs/common';
-import {
-  EmailAccountService,
-  EmailAccountEntity,
-  EmailAccountConfigType,
-} from '../emailAccount';
-import * as Imap from 'imap'; // Import IMAP package
-import { simpleParser } from 'mailparser'; // For parsing the email
+import * as Imap from 'imap';
+import { simpleParser } from 'mailparser';
+import { EmailAccountConfigType } from '../emailAccount/dtos/email-account.dto';
+import { EmailAccountEntity } from '../emailAccount/entities/email-account.entity';
+
+import emailAddresses, { ParsedMailbox } from 'email-addresses';
+import { EmailMessageDto, IEmailAddressWithName } from 'src/lib/types';
+import { EmailQueueService } from '../queue/email-queue.service';
+import { IJwtUserPayload } from '../user/dtos/user.dto';
+const fs = require('fs');
+const path = require('path');
 
 @Injectable()
 export class EmailReceivingService {
-  constructor(private readonly emailAccountService: EmailAccountService) {}
+  constructor(private emailQueueService: EmailQueueService) {}
 
   // Function to fetch emails using the configuration
-  async fetchEmails(userId: string, config: string): Promise<any> {
-    const emailConfig = await this.emailAccountService.getOneConfigByUser(
-      userId,
-      config,
-    ); // Fetch user's email configs
-
-    if (!emailConfig) {
-      throw new Error('Email config not found');
-    }
-
-    switch (emailConfig.configType) {
+  async fetchEmails(
+    config: EmailAccountEntity,
+    user: IJwtUserPayload,
+  ): Promise<any> {
+    switch (config.configType) {
       case EmailAccountConfigType.IMAP:
-        await this.fetchEmailsViaImap(emailConfig);
+        await this.fetchEmailsViaImap(config, user);
         break;
       case EmailAccountConfigType.API:
-        await this.fetchEmailsViaApi(emailConfig);
+        await this.fetchEmailsViaApi(config);
         break;
       case EmailAccountConfigType.OAUTH:
-        await this.fetchEmailsViaOauth(emailConfig);
+        await this.fetchEmailsViaOauth(config);
         break;
       default:
         throw new Error('Unsupported email config type');
@@ -39,7 +36,9 @@ export class EmailReceivingService {
   }
 
   // Handle fetching emails via IMAP
-  private async fetchEmailsViaImap(config: EmailAccountEntity) {
+  private async fetchEmailsViaImap(config: EmailAccountEntity, user) {
+    console.log('Fetching emails via IMAP');
+
     const imap = new Imap({
       user: config.imapUsername,
       password: config.imapPassword,
@@ -48,20 +47,27 @@ export class EmailReceivingService {
       tls: config.imapSecure,
     });
 
+    console.log('IMAP CONFIG : ', imap);
+
     imap.once('ready', () => {
+      console.log('Opening inbox');
       imap.openBox('INBOX', true, (err, box) => {
+        console.log('Opened inbox');
         if (err) throw err;
+        console.log('Searching for unseen emails');
         imap.search(['UNSEEN'], (err, results) => {
           if (err) throw err;
-
+          console.log('Found unseen emails');
+          console.log('Results: ', results);
           const fetch = imap.fetch(results, { bodies: '' });
           fetch.on('message', (msg) => {
             msg.on('body', (stream) => {
               simpleParser(stream, (err, parsed) => {
                 if (err) throw err;
-                // Handle the parsed email (You can pass it for further processing)
-                console.log(parsed.subject);
-                console.log(parsed.text);
+                //Pass it to the queue service
+                const messagePayload = this.getRelevantEmailData(parsed);
+                this.addToLocalFile(messagePayload);
+                this.sendEmailToQueue(messagePayload, user);
                 // Implement the email analysis or pass it to another service
               });
             });
@@ -74,6 +80,7 @@ export class EmailReceivingService {
     });
 
     imap.once('error', (err) => {
+      console.log('Imap hit an error');
       console.log(err);
     });
 
@@ -100,5 +107,81 @@ export class EmailReceivingService {
     // OAuth logic would go here, such as interacting with the OAuth token to access the email provider's API
     console.log('Fetching emails via OAuth');
     // This might involve using Google APIs, Outlook APIs, or similar for OAuth-based email fetching
+  }
+
+  private async sendEmailToQueue(
+    message: EmailMessageDto,
+    user: IJwtUserPayload,
+  ) {
+    console.log('Sending email to queue', { message, user });
+    return this.emailQueueService.addEmailToQueue({ message, user });
+  }
+
+  private getRelevantEmailData(data: any): EmailMessageDto {
+    const dataString = JSON.stringify(data);
+    const parsedData = JSON.parse(dataString);
+
+    const emailData: EmailMessageDto = {
+      from: this.getEmailFromValues(parsedData.from),
+      to: this.getEmailFromValues(parsedData.to),
+      subject: parsedData.subject,
+      date: parsedData.date,
+      text: parsedData.text,
+      textAsHtml: parsedData.textAsHtml,
+      messageId: parsedData.messageId,
+    };
+
+    console.log('PARSED EMAIL DATA : ', emailData);
+
+    return emailData;
+  }
+
+  private getEmailFromValues(data: {
+    value: IEmailAddressWithName[];
+    text: string;
+  }): IEmailAddressWithName {
+    try {
+      // const userEmail = this.extractEmail(data?.text);
+      const userEmail = data?.value?.[0];
+      if (!userEmail?.address) throw new Error('No sender found');
+
+      const result = data?.value?.find(
+        ({ address }) => address === userEmail.address,
+      );
+
+      if (!result) {
+        console.log({ userEmail, email: data?.value });
+        throw new Error('Email not found');
+      }
+      return result;
+    } catch (error) {
+      console.log({ text: data?.text, email: data?.value });
+      console.error('Error getting email from values:', error);
+      throw new Error('Failed to get email from values');
+    }
+  }
+
+  private addToLocalFile(parsed: any) {
+    try {
+      const emailData = JSON.stringify(parsed, null, 2);
+      const filePath = path.join(__dirname, 'emails', `${Date.now()}.json`);
+
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+      fs.writeFileSync(filePath, emailData);
+
+      console.log(`Email saved to ${filePath}`);
+    } catch (error) {
+      console.error('Error saving email to file:', error);
+      throw new Error('Failed to save email');
+    }
+  }
+
+  private extractEmail(text: string): string | null {
+    // Regular expression to match email addresses
+    const emailRegex = /<([^>]+)>/;
+    const match = text.match(emailRegex);
+
+    // Return the email address if found, otherwise return null
+    return match ? match[1] : null;
   }
 }

@@ -6,13 +6,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from './user.entity';
+import { UserEntity } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import { UserCreatedDto, UserCreateDto, UserDto } from './user.dto';
+import { UserCreatedDto, UserCreateDto, UserDto } from './dtos/user.dto';
 import * as bcrypt from 'bcrypt';
 import { getEnvVar } from 'src/config/global';
 import { v4 as uuidv4 } from 'uuid';
-import { CustomLoggerService } from 'src/lib/logger';
+import { CustomLoggerService } from '../../lib/logger/logger.service';
 
 @Injectable()
 export class UserService {
@@ -21,7 +21,7 @@ export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
-    private readonly logger: CustomLoggerService,
+    // private readonly logger: CustomLoggerService,
   ) {
     const hashSalt = getEnvVar('HASH_SALT');
     if (!hashSalt) {
@@ -94,7 +94,7 @@ export class UserService {
       return userDetails as UserDto;
     } catch (error) {
       const message = 'Error verifying user.';
-      this.logger.error({ message });
+      console.error({ message });
       throw new UnauthorizedException({ message });
     }
   }
@@ -134,7 +134,7 @@ export class UserService {
       }
 
       message = 'Error creating user';
-      this.logger.log({ message, context: this.create.name });
+      console.log({ message, context: this.create.name });
       throw new BadRequestException({ message });
     }
   }
@@ -152,7 +152,12 @@ export class UserService {
    * @returns A unique verification token as a string.
    */
   private generateVerificationToken(): string {
-    return uuidv4(); // Generates a UUID v4 token
+    try {
+      return uuidv4();
+    } catch (error) {
+      console.error('Error generating verification token:', error);
+      throw new Error('Failed to generate verification token.');
+    }
   }
 
   /**

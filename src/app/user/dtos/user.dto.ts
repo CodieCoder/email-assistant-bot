@@ -14,6 +14,7 @@ export interface UserDto {
   lastName: string;
   summary: string;
   description: string;
+  activeConfigId: string;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date;
@@ -95,6 +96,14 @@ export class UserCreateDto {
 
   @IsOptional()
   description: string;
+
+  @IsEnum(UserAccountTypeEnum)
+  @ApiProperty({
+    description: 'The account type of the user',
+    example: 'personal',
+    enum: UserAccountTypeEnum,
+  })
+  accountType: UserAccountTypeEnum;
 }
 
 export class UserUpdateDto {

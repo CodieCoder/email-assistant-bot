@@ -1,8 +1,8 @@
 import { BaseEntity } from 'src/lib/entity/entity.base';
 import { Column, Entity, Index, OneToMany } from 'typeorm';
-import { MessageEntity } from '../emailAnalyst';
-import { UserAccountTypeEnum } from './user.dto';
-import { EmailAccountEntity } from '../emailAccount/email-account.entity';
+import { UserAccountTypeEnum } from '../dtos/user.dto';
+import { MessageEntity } from '../../emailAnalyst/entities/message.entity';
+import { EmailAccountEntity } from '../../emailAccount/entities/email-account.entity';
 
 @Entity()
 export class UserEntity extends BaseEntity {
@@ -33,6 +33,9 @@ export class UserEntity extends BaseEntity {
 
   @Column({ nullable: true })
   verificationToken: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  activeConfigId: string;
 
   @OneToMany(() => EmailAccountEntity, (emailConfig) => emailConfig.user)
   emailConfigs: EmailAccountEntity[];

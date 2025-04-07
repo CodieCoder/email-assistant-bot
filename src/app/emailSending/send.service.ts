@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CustomLoggerService } from 'src/lib/logger';
+import { CustomLoggerService } from '../../lib/logger/logger.service';
 
 @Injectable()
 export class EmailerService {
-  constructor(private readonly logger: CustomLoggerService) {}
+  constructor() {} // private readonly logger: CustomLoggerService
 
   public async sendEmail(
     to: string,
@@ -14,9 +14,9 @@ export class EmailerService {
     // You can use a library like Nodemailer or AWS SES to send emails
     // Example:
     // await sendEmail(to, subject, html);
-    this.logger.log({ message: 'Sending email...' });
-    this.logger.log({ message: to });
-    this.logger.log({ message: subject });
-    this.logger.log({ message: html });
+    console.log({ message: 'Sending email...' });
+    console.log({ message: to });
+    console.log({ message: subject });
+    console.log({ message: html });
   }
 }

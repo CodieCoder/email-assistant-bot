@@ -1,4 +1,4 @@
-import { IAITagReport } from 'src/app/llm/llm.dto';
+import { IAITagReport } from 'src/app/llm/dtos/llm.dto';
 
 export const AIReportPlaceholder: IAITagReport = {
   confidence: 0,

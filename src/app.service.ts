@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { MessageService } from './app/emailAnalyst';
-import { IJwtUserPayload } from './app/user';
 import { EmailMessageDto } from './lib/types';
+import { MessageService } from './app/emailAnalyst/message.service';
+import { IJwtUserPayload } from './app/user/dtos/user.dto';
 
 type ProcessedEmail = any;
 

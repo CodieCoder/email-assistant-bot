@@ -9,15 +9,15 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { getEnvVar } from 'src/config/global';
 import { IS_PUBLIC_KEY } from './public';
-import { IJwtPayload, IJwtUserPayload } from '../user';
-import { CustomLoggerService } from 'src/lib/logger';
+import { CustomLoggerService } from '../../lib/logger/logger.service';
+import { IJwtPayload, IJwtUserPayload } from '../user/dtos/user.dto';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly reflector: Reflector,
-    private readonly logger: CustomLoggerService,
+    // private readonly logger: CustomLoggerService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -49,7 +49,13 @@ export class AuthGuard implements CanActivate {
       request['user'] = user;
     } catch (error) {
       const message = 'Invalid or expired token';
-      this.logger.log({
+      // this.logger.log({
+      //   message,
+      //   context: this.canActivate.name,
+      //   trace: error,
+      // });
+
+      console.log({
         message,
         context: this.canActivate.name,
         trace: error,

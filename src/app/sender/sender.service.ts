@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SenderEntity } from 'src/app/sender';
 import { Repository } from 'typeorm';
+import { SenderEntity } from './entities/sender.entity';
 
 @Injectable()
 class SenderService {

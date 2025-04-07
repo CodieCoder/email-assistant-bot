@@ -1,13 +1,14 @@
 import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
+
+import { Public } from './public';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   IUserAuthResponse,
   UserCreateDto,
   UserCreateResponseDto,
   UserLoginDto,
-} from '../user';
-import { Public } from './public';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+} from '../user/dtos/user.dto';
 
 @ApiTags('Auth')
 @Controller('auth')

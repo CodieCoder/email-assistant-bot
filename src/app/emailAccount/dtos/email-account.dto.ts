@@ -6,13 +6,15 @@ import {
   IsNumber,
   IsBoolean,
   IsEnum,
+  IsUrl,
+  IsEmail,
+  IsNotEmpty,
 } from 'class-validator';
 
 export enum EmailAccountConfigType {
   IMAP = 'imap',
   API = 'api',
   OAUTH = 'oauth',
-  OTHER = 'other',
 }
 
 export enum EmailAccountProvider {
@@ -24,7 +26,10 @@ export enum EmailAccountProvider {
 }
 
 class BaseEmailConfigDto {
-  @ApiProperty({ enum: EmailAccountConfigType })
+  @ApiProperty({
+    enum: EmailAccountConfigType,
+    example: EmailAccountConfigType.IMAP,
+  })
   @IsEnum(EmailAccountConfigType)
   configType: EmailAccountConfigType;
 
@@ -43,7 +48,7 @@ class BaseEmailConfigDto {
 
 export class CreateImapConfigDto extends BaseEmailConfigDto {
   @ApiProperty({ example: 'imap.gmail.com' })
-  @IsString()
+  @IsUrl()
   imapHost: string;
 
   @ApiProperty({ example: 993 })
@@ -51,7 +56,7 @@ export class CreateImapConfigDto extends BaseEmailConfigDto {
   imapPort: number;
 
   @ApiProperty({ example: 'me@gmail.com' })
-  @IsString()
+  @IsEmail()
   imapUsername: string;
 
   @ApiProperty({ example: 'app-password-or-token' })
@@ -80,22 +85,16 @@ export class CreateOauthConfigDto extends BaseEmailConfigDto {
   refreshToken?: string;
 }
 
-export class CreateOtherConfigDto extends BaseEmailConfigDto {
-  @ApiProperty({ example: 'custom-config-value' })
-  @IsString()
-  customValue: string;
-}
-
 export type CreateEmailAccountDto =
   | CreateImapConfigDto
   | CreateApiConfigDto
-  | CreateOauthConfigDto
-  | CreateOtherConfigDto;
+  | CreateOauthConfigDto;
 
-@ApiExtraModels(
-  CreateImapConfigDto,
-  CreateApiConfigDto,
-  CreateOauthConfigDto,
-  CreateOtherConfigDto,
-)
+@ApiExtraModels(CreateImapConfigDto, CreateApiConfigDto, CreateOauthConfigDto)
 export class EmailAccountDtoUnionWrapper {}
+
+export class ActivateEmailImapAccountDto {
+  @IsString()
+  @IsNotEmpty()
+  configId: string;
+}

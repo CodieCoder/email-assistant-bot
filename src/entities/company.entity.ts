@@ -1,7 +1,7 @@
+import { MessageEntity } from 'src/app/emailAnalyst/entities/message.entity';
 import { BaseEntity } from 'src/lib/entity/entity.base';
+import { TAISenderTagObject } from 'src/app/sender/dtos/sender.dto';
 import { Column, Entity, OneToMany } from 'typeorm';
-import { MessageEntity } from 'src/app/emailAnalyst';
-import { TAISenderTagObject } from 'src/app/sender';
 
 @Entity()
 export class CompanyEntity extends BaseEntity {

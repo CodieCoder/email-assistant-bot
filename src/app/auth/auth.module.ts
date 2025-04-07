@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserEntity } from '../user';
 import { AuthService } from './auth.service';
-import { AuthController } from './';
-import { UserService } from '../user';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { getEnvVar } from 'src/config/global';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth.guard';
 import { PassportModule } from '@nestjs/passport';
-import { LoggerModule } from 'src/lib/logger/logger.module';
+import { CustomLoggerModule } from 'src/lib/logger/logger.module';
+import { CustomLoggerService } from '../../lib/logger/logger.service';
+import { UserEntity } from '../user/entities/user.entity';
+import { AuthController } from './auth.controller';
+import { UserService } from '../user/user.service';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { LoggerModule } from 'src/lib/logger/logger.module';
       }),
     }),
 
-    LoggerModule,
+    // CustomLoggerModule,
   ],
   providers: [
     {
@@ -34,6 +35,7 @@ import { LoggerModule } from 'src/lib/logger/logger.module';
     AuthService,
     UserService,
     JwtService,
+    // CustomLoggerService,
   ],
   controllers: [AuthController],
 })

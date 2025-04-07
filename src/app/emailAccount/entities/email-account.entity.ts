@@ -1,11 +1,11 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { UserEntity } from '../user/user.entity';
 import { BaseEntity } from 'src/lib/entity/entity.base';
 import { cryptoTransformer } from 'src/lib/transformers/cryptoTransformer';
 import {
   EmailAccountConfigType,
   EmailAccountProvider,
-} from './email-account.dto';
+} from '../dtos/email-account.dto';
+import { UserEntity } from 'src/app/user/entities/user.entity';
 
 @Entity('user_email_account_configs')
 export class EmailAccountEntity extends BaseEntity {

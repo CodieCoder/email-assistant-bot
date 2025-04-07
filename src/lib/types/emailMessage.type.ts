@@ -1,27 +1,40 @@
-import { IsEmail, IsString } from 'class-validator';
-import { IAITagReportObject } from 'src/app/llm';
-import { IJwtUserPayload } from 'src/app/user';
+import { IsEmail, IsNotEmpty, IsObject, IsString } from 'class-validator';
+import { IAITagReportObject } from '../../app/llm/dtos/llm.dto';
+import { IJwtUserPayload } from '../../app/user/dtos/user.dto';
 
 export class EmailMessageDto {
-  @IsEmail()
-  to: string;
+  @IsString()
+  @IsNotEmpty()
+  messageId: string;
 
-  @IsEmail()
-  sender: string;
+  @IsNotEmpty()
+  @IsObject()
+  from: IEmailAddressWithName;
+
+  @IsNotEmpty()
+  @IsObject()
+  to: IEmailAddressWithName;
 
   @IsString()
+  @IsNotEmpty()
+  date: string;
+
+  @IsString()
+  @IsNotEmpty()
   subject: string;
 
   @IsString()
-  emailId: string;
+  @IsNotEmpty()
+  text: string;
 
   @IsString()
-  content: string;
+  @IsNotEmpty()
+  textAsHtml: string;
 }
 
 export interface IProcessedEmailMessage {
   emailId: string;
-  sender: string;
+  sender: IEmailAddressWithName;
   summary: string;
   description: string;
   tags: IAITagReportObject;
@@ -45,5 +58,19 @@ export enum EmailMessageTypeEnum {
   NEWSLETTER = 'newsletter',
   SUBSCRIPTION = 'subscription',
   ADVERTISEMENT = 'advertisement',
+  SUPPORT_REQUEST = 'supportRequest',
+  FEEDBACK = 'feedback',
+  URGENT = 'urgent',
+  FOLLOW_UP = 'followUp',
+  INTERNAL = 'internal',
+  EXTERNAL = 'external',
+  PROMOTION = 'promotion',
+  EVENT = 'event',
+  SPAM = 'spam',
   OTHER = 'other',
+}
+
+export interface IEmailAddressWithName {
+  address: string;
+  name: string;
 }

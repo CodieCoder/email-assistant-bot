@@ -17,7 +17,7 @@ import { ApiBody, ApiOAuth2 } from '@nestjs/swagger';
 import { IJwtUserPayload } from '../user/dtos/user.dto';
 import { UserInfo } from '../../lib/decorators/user.auth.decorator';
 
-@Controller('email-config')
+@Controller('user/email-config')
 export class EmailAccountController {
   constructor(private readonly emailConfigService: EmailAccountService) {}
 

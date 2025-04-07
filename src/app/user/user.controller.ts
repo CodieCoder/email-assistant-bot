@@ -1,8 +1,6 @@
 import { Controller, UseGuards } from '@nestjs/common';
 
 @Controller('users')
-class UsersController {
+export class UsersController {
   constructor() {}
 }
-
-export default UsersController;

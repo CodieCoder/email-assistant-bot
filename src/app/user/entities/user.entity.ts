@@ -1,8 +1,9 @@
 import { BaseEntity } from 'src/lib/entity/entity.base';
-import { Column, Entity, Index, OneToMany } from 'typeorm';
+import { Column, Entity, Index, OneToMany, OneToOne } from 'typeorm';
 import { UserAccountTypeEnum } from '../dtos/user.dto';
 import { MessageEntity } from '../../emailAnalyst/entities/message.entity';
 import { EmailAccountEntity } from '../../emailAccount/entities/email-account.entity';
+import { TelegramAccountEntity } from 'src/app/telegram/entities/telegram.entity';
 
 @Entity()
 export class UserEntity extends BaseEntity {
@@ -42,4 +43,11 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => MessageEntity, (message) => message.user, { cascade: true })
   messages: MessageEntity[];
+
+  @OneToOne(
+    () => TelegramAccountEntity,
+    (telegramAccount) => telegramAccount.user,
+    { cascade: true },
+  )
+  telegramAccount: TelegramAccountEntity;
 }

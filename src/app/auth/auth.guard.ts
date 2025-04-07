@@ -58,7 +58,6 @@ export class AuthGuard implements CanActivate {
       console.log({
         message,
         context: this.canActivate.name,
-        trace: error,
       });
       throw new UnauthorizedException({ message });
     }

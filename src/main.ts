@@ -1,10 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { CustomLoggerService } from './lib/logger/logger.service';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SanitizeInterceptor } from './lib/interceptors/sanitize.interceptor';
 
-const ALLOWED_IPS = ['http://localhost:3000'];
+const ALLOWED_IPS = process.env.CORS_ALLOWED_IPS?.split(',') || [];
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,8 +12,11 @@ async function bootstrap() {
   ///Validation pipes
   app.useGlobalPipes(new ValidationPipe());
 
+  //Global interceptors
+  app.useGlobalInterceptors(new SanitizeInterceptor());
+
   //Logger
-  // app.useLogger(app.get(CustomLoggerService));
+  app.useLogger(app.get(Logger));
 
   // API Versioning
   app.setGlobalPrefix('api/v1');
@@ -23,13 +26,12 @@ async function bootstrap() {
     .setTitle('Email Assistant API')
     .setDescription('API documentation for the Email Assistant Bot')
     .setVersion('1.0')
-    .addBearerAuth() // Add support for Bearer token authentication
+    .addBearerAuth()
     .build();
 
-  //Enable CORS
   app.enableCors({
     origin: ALLOWED_IPS,
-    methods: 'GET,POST',
+    methods: 'GET,POST, PATCH',
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
@@ -37,8 +39,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/v1/docs', app, document);
 
-  //start server
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 8000);
 }
 
 bootstrap();

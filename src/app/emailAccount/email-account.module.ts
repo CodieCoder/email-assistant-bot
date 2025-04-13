@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { EmailAccountService } from './email-account.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EmailAccountEntity } from './entities/email-account.entity';
@@ -15,7 +15,7 @@ import { EmailReceivingModule } from '../emailReceiving/email-receiving.module';
     EmailReceivingModule,
   ],
   controllers: [EmailAccountController],
-  providers: [UserService, EmailAccountService],
+  providers: [UserService, EmailAccountService, Logger],
   exports: [EmailAccountService],
 })
 export class EmailAccountModule {}

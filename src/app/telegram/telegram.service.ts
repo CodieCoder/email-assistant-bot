@@ -1,10 +1,8 @@
-// src/telegram/telegram.service.ts
-import { Injectable, Logger } from '@nestjs/common';
-import { getEnvVar } from 'src/config/global';
-import { Telegraf } from 'telegraf';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { TelegramAccountEntity } from './entities/telegram.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CreateTelegramAccountDto } from './dtos/telegram.dto';
 
 @Injectable()
 export class TelegramService {
@@ -21,25 +19,63 @@ export class TelegramService {
     return this.repo.findOne({ where: { userId } });
   }
 
-  public async linkTelegramAccount(
+  public async add(
     userId: string,
-    telegramChatId: string,
-    telegramUsername?: string,
+    dto: Partial<CreateTelegramAccountDto>,
   ): Promise<TelegramAccountEntity> {
-    const existingAccount = await this.getTelegramAccountByUserId(userId);
+    const existingAccount = await this.repo.findOne({ where: { userId } });
     if (existingAccount) {
-      existingAccount.telegramChatId = telegramChatId;
-      existingAccount.telegramUsername = telegramUsername;
-      existingAccount.isLinked = true;
-      return this.repo.save(existingAccount);
+      throw new BadRequestException('Telegram account already exist');
     }
 
     const newAccount = this.repo.create({
       userId,
-      telegramChatId,
-      telegramUsername,
+      telegramChatId: dto.telegramChatId,
+      telegramUsername: dto.telegramUsername,
       isLinked: true,
     });
+
     return this.repo.save(newAccount);
+  }
+
+  public async update(
+    id: string,
+    dto: Partial<CreateTelegramAccountDto>,
+  ): Promise<TelegramAccountEntity> {
+    const existingAccount = await this.repo.findOne({ where: { id } });
+    if (!existingAccount) {
+      throw new Error('Telegram account not found');
+    }
+    const payload = {
+      ...existingAccount,
+      ...dto,
+    };
+    return this.repo.save(payload);
+  }
+
+  public async unlinkTelegramAccount(userId: string): Promise<void> {
+    const existingAccount = await this.getTelegramAccountByUserId(userId);
+    if (existingAccount) {
+      existingAccount.isLinked = false;
+      await this.repo.save(existingAccount);
+    }
+  }
+
+  public async findById(
+    telegramChatId: string,
+    isEnabled = true,
+  ): Promise<TelegramAccountEntity | null> {
+    const telegramAccount = await this.repo.findOne({
+      where: {
+        telegramChatId,
+        isEnabled,
+      },
+    });
+
+    return telegramAccount;
+  }
+
+  public async findAll(userId: string): Promise<TelegramAccountEntity[]> {
+    return this.repo.find({ where: { userId } });
   }
 }

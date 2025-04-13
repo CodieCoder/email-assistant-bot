@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,7 +13,6 @@ import { UserCreatedDto, UserCreateDto, UserDto } from './dtos/user.dto';
 import * as bcrypt from 'bcrypt';
 import { getEnvVar } from 'src/config/global';
 import { v4 as uuidv4 } from 'uuid';
-import { CustomLoggerService } from '../../lib/logger/logger.service';
 
 @Injectable()
 export class UserService {
@@ -21,7 +21,7 @@ export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
-    // private readonly logger: CustomLoggerService,
+    private logger: Logger,
   ) {
     const hashSalt = getEnvVar('HASH_SALT');
     if (!hashSalt) {
@@ -37,7 +37,13 @@ export class UserService {
    * @returns UserDto | null
    */
   public async findOneByEmail(email: string): Promise<UserDto | null> {
-    const user = await this.userRepo.findOne({ where: { email } });
+    if (!email) {
+      throw new BadRequestException('Email is required');
+    }
+
+    const user = await this.userRepo.findOne({
+      where: { email: email.toLowerCase() },
+    });
     if (!user) {
       return null;
     }
@@ -47,8 +53,8 @@ export class UserService {
   }
 
   /**
-   * @description: Find user by email
-   * @param email email address of the user
+   * @description: Find user by Id
+   * @param id User ID
    * @returns UserDto | null
    */
   public async findOneById(id: string): Promise<UserDto | null> {
@@ -56,6 +62,7 @@ export class UserService {
     if (!user) {
       return null;
     }
+
     const { password, ...userDetails } = user;
 
     return userDetails as UserDto;
@@ -71,6 +78,10 @@ export class UserService {
     email: string,
     hashedPassword: string,
   ): Promise<UserDto | null> {
+    if (!email || !hashedPassword) {
+      throw new BadRequestException('Email and password are required');
+    }
+    email = email.toLowerCase();
     try {
       const user = await this.userRepo.findOne({
         where: { email: email },
@@ -94,7 +105,7 @@ export class UserService {
       return userDetails as UserDto;
     } catch (error) {
       const message = 'Error verifying user.';
-      console.error({ message });
+      this.logger.error({ message });
       throw new UnauthorizedException({ message });
     }
   }
@@ -106,6 +117,8 @@ export class UserService {
    * @throws ConflictException if the email is already in use.
    */
   public async create(userDto: UserCreateDto): Promise<UserCreatedDto> {
+    userDto.email = userDto.email.toLowerCase();
+
     const existingUser = await this.userRepo.findOne({
       where: { email: userDto.email },
     });
@@ -134,7 +147,7 @@ export class UserService {
       }
 
       message = 'Error creating user';
-      console.log({ message, context: this.create.name });
+      this.logger.log({ message, context: this.create.name });
       throw new BadRequestException({ message });
     }
   }
@@ -155,7 +168,7 @@ export class UserService {
     try {
       return uuidv4();
     } catch (error) {
-      console.error('Error generating verification token:', error);
+      this.logger.error('Error generating verification token:', error);
       throw new Error('Failed to generate verification token.');
     }
   }

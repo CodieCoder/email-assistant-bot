@@ -2,6 +2,7 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -9,15 +10,15 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { getEnvVar } from 'src/config/global';
 import { IS_PUBLIC_KEY } from './public';
-import { CustomLoggerService } from '../../lib/logger/logger.service';
 import { IJwtPayload, IJwtUserPayload } from '../user/dtos/user.dto';
+import { GLOBAL_ERRORS } from 'src/lib/constants/errors';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly reflector: Reflector,
-    // private readonly logger: CustomLoggerService,
+    private readonly logger: Logger,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -34,7 +35,7 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException('Authorization token is missing');
+      throw new UnauthorizedException(GLOBAL_ERRORS.AUTH_ERRORS.UNAUTHORIZED);
     }
 
     try {
@@ -49,17 +50,12 @@ export class AuthGuard implements CanActivate {
       request['user'] = user;
     } catch (error) {
       const message = 'Invalid or expired token';
-      // this.logger.log({
-      //   message,
-      //   context: this.canActivate.name,
-      //   trace: error,
-      // });
 
-      console.log({
+      this.logger.log({
         message,
         context: this.canActivate.name,
       });
-      throw new UnauthorizedException({ message });
+      throw new UnauthorizedException(GLOBAL_ERRORS.AUTH_ERRORS.UNAUTHORIZED);
     }
 
     return true;

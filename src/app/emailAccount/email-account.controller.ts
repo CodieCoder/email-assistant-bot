@@ -6,17 +6,20 @@ import {
   Body,
   Param,
   Patch,
+  UseInterceptors,
 } from '@nestjs/common';
 import { EmailAccountService } from './email-account.service';
 import {
-  ActivateEmailImapAccountDto,
+  SyncEmailImapAccountDto,
   CreateImapConfigDto,
   EmailAccountDtoUnionWrapper,
 } from './dtos/email-account.dto';
-import { ApiBody, ApiOAuth2 } from '@nestjs/swagger';
+import { ApiBody } from '@nestjs/swagger';
 import { IJwtUserPayload } from '../user/dtos/user.dto';
 import { UserInfo } from '../../lib/decorators/user.auth.decorator';
+import { SanitizeInterceptor } from 'src/lib/interceptors/sanitize.interceptor';
 
+@UseInterceptors(SanitizeInterceptor)
 @Controller('user/email-config')
 export class EmailAccountController {
   constructor(private readonly emailConfigService: EmailAccountService) {}
@@ -30,15 +33,15 @@ export class EmailAccountController {
     return await this.emailConfigService.createConfig(userInfo.id, configDto);
   }
 
-  @ApiBody({ type: ActivateEmailImapAccountDto })
-  @Post('imap/activate')
-  async activateImapConfig(
+  @ApiBody({ type: SyncEmailImapAccountDto })
+  @Post('imap/sync')
+  async syncImapConfig(
     @UserInfo() userInfo: IJwtUserPayload,
-    @Body() activateConfigDto: ActivateEmailImapAccountDto,
+    @Body() syncConfigDto: SyncEmailImapAccountDto,
   ) {
-    return await this.emailConfigService.activateImapConfig(
+    return await this.emailConfigService.syncImapConfig(
       userInfo.id,
-      activateConfigDto.configId,
+      syncConfigDto.configId,
     );
   }
 

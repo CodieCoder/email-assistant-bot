@@ -2,18 +2,22 @@ import { Process, Processor } from '@nestjs/bull';
 import { Job, Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
-import { QueueNameEnum, QueueProcessEnum } from './dtos/queue.dto';
-import { IEmailMessageQueue, IProcessedEmailMessageQueue } from 'src/lib/types';
-import { MessageService } from '../emailAnalyst/message.service';
+import {
+  QUEUE_PROCESS_KEYS,
+  QUEUE_TABLE_KEYS,
+  QueueProcessEnum,
+} from '../dtos/queue.dto';
+import { IEmailMessageQueue, IProcessedEmailMessageQueue } from 'src/lib/dtos';
+import { MessageService } from '../../emailAnalyst/message.service';
 
 /**
  * @description : This service is responsible for processing the email queue and analyzing email data, saving the processed data to DB and add to processedEmailQueue.
  */
-@Processor(QueueNameEnum.EmailQueue)
+@Processor(QUEUE_TABLE_KEYS.EMAIL.NEW)
 @Injectable()
 export class EmailQueueProcessorService {
   constructor(
-    @InjectQueue(QueueNameEnum.ProcessedEmailQueue)
+    @InjectQueue(QUEUE_PROCESS_KEYS.EMAIL.PROCESSED)
     private processedEmailQueue: Queue,
     private readonly messageService: MessageService,
   ) {}

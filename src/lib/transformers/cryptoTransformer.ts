@@ -8,7 +8,6 @@ export const cryptoTransformer: ValueTransformer = {
   to: (value: string) => {
     const publicKey = getEnvVar('CRYPTO_PUBLIC_KEY');
     //decode from base64
-    console.log(publicKey);
     const encrypted = publicEncrypt(decodeKey(publicKey), Buffer.from(value));
     return encrypted.toString('base64');
   },

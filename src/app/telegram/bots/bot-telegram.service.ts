@@ -1,4 +1,3 @@
-// src/telegram/telegram.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { getEnvVar } from 'src/config/global';
 import { Telegraf } from 'telegraf';
@@ -16,7 +15,7 @@ export class TelegramBotService {
   }
 
   private setupBot() {
-    this.bot.start((ctx) => ctx.reply('Welcome to Email Assistant 👋'));
+    this.bot.start((ctx) => ctx.reply('Welcome to Email Assistant'));
 
     this.bot.command('summary', async (ctx) => {
       // Example action, can fetch email summary from DB
@@ -40,7 +39,7 @@ export class TelegramBotService {
         hookPath: path,
       },
     });
-    this.logger.log(`Telegram bot running on webhook: ${domain}/${path}`);
+    // this.logger.log(`Telegram bot running on webhook: ${domain}/${path}`);
   }
 
   getBotInstance() {

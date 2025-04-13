@@ -1,26 +1,35 @@
-// src/telegram/telegram.controller.ts
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { TelegramService } from './telegram.service';
-import { Request } from 'express';
+import { CreateTelegramAccountDto } from './dtos/telegram.dto';
+import { UserInfo } from 'src/lib/decorators/user.auth.decorator';
+import { IJwtUserPayload } from '../user/dtos/user.dto';
+import { TelegramAccountEntity } from './entities/telegram.entity';
 
 @Controller('telegram')
 export class TelegramController {
   constructor(private readonly telegramService: TelegramService) {}
 
-  @Post('launch')
-  async launchTelegramWebhook(): Promise<void> {
-    // this.telegramService.launchWebhook();
+  @Post()
+  async addTelegramAccount(
+    @UserInfo() user: IJwtUserPayload,
+    @Body() dto: CreateTelegramAccountDto,
+  ): Promise<TelegramAccountEntity> {
+    return this.telegramService.add(user.id, dto);
   }
 
-  @Post('add')
-  async addTelegramAccount(@Body() dto: any): Promise<void> {
-    // const bot = this.telegramService.addAccount(dto);
-    // bot.handleUpdate(req.body);
+  @Patch(':id')
+  async updateTelegramAccount(
+    @UserInfo() user: IJwtUserPayload,
+    @Param('id') id: string,
+    @Body() dto: Partial<CreateTelegramAccountDto>,
+  ): Promise<TelegramAccountEntity> {
+    return this.telegramService.update(id, dto);
   }
 
-  @Post('webhook')
-  async handleTelegramUpdate(@Req() req: Request): Promise<void> {
-    // const bot = this.telegramService.getBotInstance();
-    // bot.handleUpdate(req.body);
+  @Get()
+  async getTelegramAccount(
+    @UserInfo() user: IJwtUserPayload,
+  ): Promise<TelegramAccountEntity[]> {
+    return this.telegramService.findAll(user.id);
   }
 }

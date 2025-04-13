@@ -1,4 +1,10 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Post,
+  UseInterceptors,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 import { Public } from './public';
@@ -9,7 +15,9 @@ import {
   UserCreateResponseDto,
   UserLoginDto,
 } from '../user/dtos/user.dto';
+import { SanitizeInterceptor } from 'src/lib/interceptors/sanitize.interceptor';
 
+@UseInterceptors(SanitizeInterceptor)
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {

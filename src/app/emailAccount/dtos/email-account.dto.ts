@@ -1,4 +1,3 @@
-// email-config.dto.ts
 import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
 import {
   IsOptional,
@@ -93,7 +92,7 @@ export type CreateEmailAccountDto =
 @ApiExtraModels(CreateImapConfigDto, CreateApiConfigDto, CreateOauthConfigDto)
 export class EmailAccountDtoUnionWrapper {}
 
-export class ActivateEmailImapAccountDto {
+export class SyncEmailImapAccountDto {
   @IsString()
   @IsNotEmpty()
   configId: string;

@@ -1,9 +1,9 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from 'src/lib/entity/entity.base';
 import { IAITagReportObject } from 'src/app/llm/dtos/llm.dto';
-import { CompanyEntity } from 'src/entities';
 import { SenderEntity } from 'src/app/sender/entities/sender.entity';
 import { UserEntity } from 'src/app/user/entities/user.entity';
+import { CompanyEntity } from 'src/app/company/company.entity';
 
 @Entity()
 export class MessageEntity extends BaseEntity {

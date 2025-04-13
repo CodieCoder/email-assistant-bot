@@ -1,3 +1,4 @@
+import { MessageDto } from 'src/app/emailAnalyst/dtos/message.dto';
 import { IAITagReport } from 'src/app/llm/dtos/llm.dto';
 import { SenderTagDescriptionsEnum } from 'src/lib/constants';
 
@@ -10,4 +11,13 @@ export interface IAISenderObject {
   summary?: string;
   description?: string;
   tags?: TAISenderTagObject;
+}
+
+export interface SenderDto {
+  email: string;
+  name?: string;
+  summary: string;
+  description: string;
+  tags?: TAISenderTagObject;
+  messages: MessageDto[];
 }

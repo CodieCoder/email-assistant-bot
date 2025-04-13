@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EmailMessageDto } from './lib/types';
+import { EmailMessageDto } from './lib/dtos/index.js';
 import { MessageService } from './app/emailAnalyst/message.service';
 import { IJwtUserPayload } from './app/user/dtos/user.dto';
 
@@ -18,8 +18,6 @@ export class AppService {
       emailMessage,
       userInfo,
     );
-
-    // await this.handleEmail(processedEmail);
 
     return processedEmail;
   }

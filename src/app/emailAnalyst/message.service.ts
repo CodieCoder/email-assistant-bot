@@ -9,18 +9,19 @@ import { Repository } from 'typeorm';
 import { IAICompanyObject } from 'src/app/llm/dtos/llm.dto';
 import SenderService from '../sender/sender.service';
 import LLMService from '../llm/llm.service';
-import { CompanyEntity } from 'src/entities';
 import {
   EmailMessageDto,
   IEmailAddressWithName,
   IProcessedEmailMessage,
-} from 'src/lib/types';
+} from 'src/lib/dtos';
 import { MessageEntity } from './entities/message.entity';
 import { UserService } from '../user/user.service';
 import { IJwtUserPayload } from '../user/dtos/user.dto';
 import { UserEntity } from '../user/entities/user.entity';
 import { IMessageContext } from './dtos/message.dto';
 import { SenderEntity } from '../sender/entities/sender.entity';
+import { CompanyEntity } from '../company/company.entity';
+import { getCompany } from 'src/lib/utils';
 
 @Injectable()
 export class MessageService {
@@ -116,8 +117,10 @@ export class MessageService {
       });
 
       if (!company) {
-        company = this.companyRepo.create({ emailDomain });
-        await this.companyRepo.save(company);
+        company = this.companyRepo.create({
+          emailDomain,
+        });
+        await this.companyRepo.save({ ...company, ...getCompany(emailDomain) });
       }
 
       return company;
@@ -179,7 +182,10 @@ export class MessageService {
         company = Object.assign(company, newCompany);
       }
 
-      return await this.companyRepo.save(company);
+      return await this.companyRepo.save({
+        ...company,
+        ...getCompany(emailDomain),
+      });
     } catch (error) {
       throw new BadRequestException(error, {
         description: 'Error getting or creating company details',
@@ -199,6 +205,7 @@ export class MessageService {
         address: message.sender.email,
         name: message.sender.name || '',
       },
+      subject: message.subject,
       summary: message.summary,
       description: message.description,
       tags: message.tags,

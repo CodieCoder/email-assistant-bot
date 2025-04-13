@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AppService } from './app.service';
-import { EmailMessageDto } from './lib/types';
+import { EmailMessageDto } from './lib/dtos';
 import { UserInfo } from './lib/decorators/user.auth.decorator';
 import { IJwtUserPayload } from './app/user/dtos/user.dto';
 

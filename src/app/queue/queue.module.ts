@@ -1,43 +1,53 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
-import { EmailQueueProcessorService } from './email-queue.processor.service';
-import { QueueNameEnum } from './dtos/queue.dto';
-import { EmailQueueService } from './email-queue.service';
-import { EmailQueueToolService } from './emai-queue.tool.service';
+import { EmailQueueProcessorService } from './processors/email-queue.processor.service';
+import { QUEUE_TABLE_KEYS } from './dtos/queue.dto';
+import { QueueService } from './queue.service';
 import { MessageService } from '../emailAnalyst/message.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MessageEntity } from '../emailAnalyst/entities/message.entity';
 import { MessageModule } from '../emailAnalyst/message.module';
-import SenderService from '../sender/sender.service';
-import LLMService from '../llm/llm.service';
 import { UserService } from '../user/user.service';
-import { CompanyEntity } from 'src/entities';
-import { SenderEntity } from '../sender/entities/sender.entity';
 import { UserEntity } from '../user/entities/user.entity';
+import { EmailQueueToolService } from './processors/email-queue.tool.service';
+import { TelegramQueueProcessorService } from './processors/telegram-queue.processor.service';
+import { TelegramService } from '../telegram/telegram.service';
+import { TelegramBotService } from '../telegram/bots/bot-telegram.service';
+import { TelegramAccountEntity } from '../telegram/entities/telegram.entity';
+import SenderModule from '../sender/sender.module';
+import { LLMModule } from '../llm/llm.module';
+import { CompanyEntity } from '../company/company.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       MessageEntity,
       CompanyEntity,
-      SenderEntity,
       UserEntity,
+      TelegramAccountEntity,
     ]),
-    MessageModule,
     BullModule.registerQueue(
-      { name: QueueNameEnum.EmailQueue },
-      { name: QueueNameEnum.ProcessedEmailQueue },
+      { name: QUEUE_TABLE_KEYS.EMAIL.NEW },
+      { name: QUEUE_TABLE_KEYS.EMAIL.PROCESSED },
+      { name: QUEUE_TABLE_KEYS.TELEGRAM.INCOMING },
+      { name: QUEUE_TABLE_KEYS.TELEGRAM.OUTGOING },
+      { name: QUEUE_TABLE_KEYS.TELEGRAM.PROCESSED },
     ),
+    MessageModule,
+    SenderModule,
+    LLMModule,
   ],
   providers: [
-    EmailQueueService,
+    Logger,
+    QueueService,
     EmailQueueProcessorService,
     EmailQueueToolService,
+    TelegramQueueProcessorService,
+    TelegramService,
+    TelegramBotService,
     MessageService,
-    SenderService,
-    LLMService,
     UserService,
   ],
-  exports: [EmailQueueService, BullModule],
+  exports: [QueueService, BullModule],
 })
-export class EmailQueueModule {}
+export class QueueModule {}

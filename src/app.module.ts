@@ -1,4 +1,4 @@
-import { Logger, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,14 +8,12 @@ import SenderModule from './app/sender/sender.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { CustomLoggerModule } from './lib/logger/logger.module';
 import { CustomLoggerService } from './lib/logger/logger.service';
-import { MessageService } from './app/emailAnalyst/message.service';
-import { EmailAccountController } from './app/emailAccount/email-account.controller';
 import { EmailAccountModule } from './app/emailAccount/email-account.module';
 import { UserModule } from './app/user/user.module';
 import { AuthModule } from './app/auth/auth.module';
 import { MessageModule } from './app/emailAnalyst/message.module';
-import { EmailQueueModule } from './app/queue/queue.module';
 import { LoggingInterceptor } from './lib/logger/logging.interceptor';
+import { SystemModule } from './app/system/system.module';
 
 @Module({
   imports: [
@@ -35,7 +33,7 @@ import { LoggingInterceptor } from './lib/logger/logging.interceptor';
     MessageModule,
     EmailAccountModule,
     CustomLoggerModule,
-    EmailQueueModule,
+    SystemModule,
   ],
   controllers: [AppController],
   providers: [

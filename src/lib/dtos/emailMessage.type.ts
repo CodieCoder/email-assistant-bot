@@ -35,6 +35,7 @@ export class EmailMessageDto {
 export interface IProcessedEmailMessage {
   emailId: string;
   sender: IEmailAddressWithName;
+  subject: string;
   summary: string;
   description: string;
   tags: IAITagReportObject;

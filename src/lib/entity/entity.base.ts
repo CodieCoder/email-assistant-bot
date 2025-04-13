@@ -1,4 +1,5 @@
 import {
+  Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
@@ -23,4 +24,7 @@ export class BaseEntity {
   @Index()
   @DeleteDateColumn()
   deletedAt?: Date;
+
+  @Column({ type: 'boolean', default: true })
+  isEnabled?: boolean;
 }

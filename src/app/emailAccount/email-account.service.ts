@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,62 +25,58 @@ export class EmailAccountService {
     private readonly emailConfigRepo: Repository<EmailAccountEntity>,
     private readonly userService: UserService,
     private readonly emailService: EmailReceivingService,
+    private readonly loggerService: Logger,
   ) {}
 
   async createConfig(userId: string, configDto: CreateEmailAccountDto) {
     //Validate user and make sure user does not have more than one config of the same type
     const user = await this.userService.findOneById(userId);
-    if (!user) {
-      console.error('Invalid user', userId);
+    if (!user?.id) {
+      this.loggerService.error('Invalid user', userId);
       throw new UnauthorizedException({ description: 'Invalid user' });
     }
 
-    console.log('User', userId);
-
     //Check and get for config
     const existingConfig = await this.emailConfigRepo.findOne({
-      where: { userId, configType: configDto.configType },
+      where: { userId: user.id, configType: configDto.configType },
     });
 
     if (existingConfig) {
-      console.error('Duplicate configuration : ', existingConfig);
+      this.loggerService.error('Duplicate configuration : ', existingConfig);
       throw new BadRequestException({
         description: `User already has a configuration of type ${configDto.configType}`,
       });
     }
 
     let configPayload: Partial<EmailAccountEntity> = {
-      userId,
+      userId: user.id,
       ...configDto,
     };
 
     switch (configDto.configType) {
       case EmailAccountConfigType.IMAP:
         configPayload = this.getImapConfigPayload(
-          configDto as CreateImapConfigDto,
+          configPayload as CreateImapConfigDto,
         );
         break;
       case EmailAccountConfigType.API:
         configPayload = this.getApiConfigPayload(
-          configDto as CreateApiConfigDto,
+          configPayload as CreateApiConfigDto,
         );
         break;
       case EmailAccountConfigType.OAUTH:
         configPayload = this.getOauthConfigPayload(
-          configDto as CreateOauthConfigDto,
+          configPayload as CreateOauthConfigDto,
         );
         break;
       default:
         throw new Error('Unknown config type');
     }
 
-    console.error('Final Config payload : ', configPayload);
-
     const config = this.emailConfigRepo.create(configPayload);
-    console.error('Saving config... : ', config);
 
     const savedConfig = await this.emailConfigRepo.save(config);
-    console.log('Saved Config : ', savedConfig);
+    this.loggerService.log('Saved Config : ', savedConfig);
     return savedConfig;
   }
 
@@ -104,17 +101,17 @@ export class EmailAccountService {
     switch (configDto.configType) {
       case EmailAccountConfigType.IMAP:
         updatedConfig = this.getImapConfigPayload(
-          configDto as CreateImapConfigDto,
+          updatedConfig as CreateImapConfigDto,
         );
         break;
       case EmailAccountConfigType.API:
         updatedConfig = this.getApiConfigPayload(
-          configDto as CreateApiConfigDto,
+          updatedConfig as CreateApiConfigDto,
         );
         break;
       case EmailAccountConfigType.OAUTH:
         updatedConfig = this.getOauthConfigPayload(
-          configDto as CreateOauthConfigDto,
+          updatedConfig as CreateOauthConfigDto,
         );
         break;
       default:
@@ -172,7 +169,6 @@ export class EmailAccountService {
       configType: EmailAccountConfigType.IMAP,
     };
 
-    console.error('IMAP Config payload : ', payload);
     return payload;
   }
 
@@ -194,7 +190,7 @@ export class EmailAccountService {
     return payload;
   }
 
-  public async activateImapConfig(userId: string, configId: string) {
+  public async syncImapConfig(userId: string, configId: string) {
     const user = await this.userService.findOneById(userId);
     if (!user) {
       throw new UnauthorizedException({ description: 'Invalid user' });

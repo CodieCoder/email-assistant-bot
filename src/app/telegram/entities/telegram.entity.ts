@@ -21,4 +21,7 @@ export class TelegramAccountEntity extends BaseEntity {
 
   @Column({ nullable: false, default: false })
   isLinked: boolean;
+
+  @Column({ nullable: true, type: 'json' })
+  extraData?: Record<string, any>;
 }

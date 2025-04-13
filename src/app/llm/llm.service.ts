@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Groq from 'groq-sdk';
@@ -10,10 +11,10 @@ import {
   EmailMessageTagDescriptionsEnum,
   SenderTagDescriptionsEnum,
 } from 'src/lib/constants';
-import { EmailMessageDto } from 'src/lib/types';
-import { CustomLoggerService } from '../../lib/logger/logger.service';
+import { EmailMessageDto } from 'src/lib/dtos';
 import { IMessageContext } from '../emailAnalyst/dtos/message.dto';
 import { TAISenderTagObject } from '../sender/dtos/sender.dto';
+import { getEnvVar } from 'src/config/global';
 
 @Injectable()
 class LLMService {
@@ -21,7 +22,7 @@ class LLMService {
 
   constructor(
     private readonly configService: ConfigService,
-    // private readonly logger: CustomLoggerService,
+    private readonly logger: Logger,
   ) {
     const apiKey = this.configService.get<string>('GROQ_API_KEY');
     if (!apiKey) {
@@ -42,6 +43,7 @@ class LLMService {
     context: IMessageContext,
   ): Promise<ILLMResponse> {
     try {
+      const model = getEnvVar('GROQ_MODEL_MODEL') || 'llama3-8b-8192';
       const prompt = this.buildPrompt(content, context);
       const completion = await this.groqClient.chat.completions.create({
         response_format: { type: 'json_object' },
@@ -49,8 +51,7 @@ class LLMService {
           { role: 'system', content: this.getSystemPrompt() },
           { role: 'user', content: prompt },
         ],
-        // model: 'llama3-8b-8192',
-        model: 'deepseek-r1-distill-qwen-32b',
+        model,
       });
 
       const response = completion.choices[0]?.message?.content;
@@ -62,7 +63,7 @@ class LLMService {
       return this.parseResponse(response);
     } catch (error) {
       const message = 'Error during Groq API call';
-      console.error({
+      this.logger.error({
         message,
         context: this.analyzeEmail.name,
         trace: error,
@@ -112,7 +113,7 @@ class LLMService {
       return JSON.parse(response);
     } catch (error) {
       const message = 'Invalid JSON response from AI';
-      console.error({
+      this.logger.error({
         message,
         context: this.analyzeEmail.name,
         trace: error,

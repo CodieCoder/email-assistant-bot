@@ -17,6 +17,7 @@ import { TelegramAccountEntity } from '../telegram/entities/telegram.entity';
 import SenderModule from '../sender/sender.module';
 import { LLMModule } from '../llm/llm.module';
 import { CompanyEntity } from '../company/company.entity';
+import { REDIS_DB_CONFIG } from 'src/config/database/redis.config.database';
 
 @Module({
   imports: [
@@ -26,6 +27,11 @@ import { CompanyEntity } from '../company/company.entity';
       UserEntity,
       TelegramAccountEntity,
     ]),
+    BullModule.forRootAsync({
+      useFactory: () => ({
+        redis: REDIS_DB_CONFIG(),
+      }),
+    }),
     BullModule.registerQueue(
       { name: QUEUE_TABLE_KEYS.EMAIL.NEW },
       { name: QUEUE_TABLE_KEYS.EMAIL.PROCESSED },

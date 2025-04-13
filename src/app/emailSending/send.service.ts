@@ -2,7 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class EmailerService {
-  constructor(private logger: Logger) {} // private readonly logger: CustomLoggerService
+  private readonly logger = new Logger(EmailerService.name);
+
+  constructor() {}
 
   public async sendEmail(
     to: string,

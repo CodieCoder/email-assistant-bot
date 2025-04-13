@@ -13,10 +13,11 @@ import { ITelegramOutgoingMessageQueue } from 'src/lib/dtos/telegram';
 @Processor(QUEUE_TABLE_KEYS.EMAIL.PROCESSED)
 @Injectable()
 export class EmailQueueToolService {
+  private readonly logger = new Logger(EmailQueueToolService.name);
+
   constructor(
     private readonly telegramService: TelegramService,
     private readonly queueService: QueueService,
-    private readonly logger: Logger,
   ) {}
 
   @Process(QueueProcessEnum.ProcessTool)

@@ -18,12 +18,10 @@ import { getEnvVar } from 'src/config/global';
 
 @Injectable()
 class LLMService {
+  private readonly logger = new Logger(LLMService.name);
   private groqClient: Groq;
 
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly logger: Logger,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('GROQ_API_KEY');
     if (!apiKey) {
       throw new InternalServerErrorException('GROQ_API_KEY is not configured');

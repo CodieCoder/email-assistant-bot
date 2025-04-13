@@ -16,12 +16,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
   private hashSalt: string;
 
   constructor(
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
-    private logger: Logger,
   ) {
     const hashSalt = getEnvVar('HASH_SALT');
     if (!hashSalt) {

@@ -12,10 +12,9 @@ const path = require('path');
 
 @Injectable()
 export class EmailReceivingService {
-  constructor(
-    private emailQueueService: QueueService,
-    private logger: Logger,
-  ) {}
+  private readonly logger = new Logger(EmailReceivingService.name);
+
+  constructor(private emailQueueService: QueueService) {}
 
   // Function to fetch emails using the configuration
   async fetchEmails(

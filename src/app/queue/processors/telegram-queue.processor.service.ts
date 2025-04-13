@@ -11,9 +11,10 @@ import { TelegramBotService } from 'src/app/telegram/bots/bot-telegram.service';
 @Processor(QUEUE_TABLE_KEYS.TELEGRAM.OUTGOING)
 @Injectable()
 export class TelegramQueueProcessorService {
+  private readonly logger = new Logger(TelegramQueueProcessorService.name);
+
   constructor(
     @InjectQueue(QUEUE_TABLE_KEYS.TELEGRAM.OUTGOING)
-    private readonly logger: Logger,
     private readonly telegramBotService: TelegramBotService,
   ) {}
 

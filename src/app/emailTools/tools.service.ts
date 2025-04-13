@@ -6,7 +6,7 @@ import { IProcessedEmailMessageQueue } from 'src/lib/dtos';
  */
 @Injectable()
 export class ToolsService {
-  constructor(private readonly logger: Logger) {}
+  private readonly logger = new Logger(ToolsService.name);
 
   public runTool(data: IProcessedEmailMessageQueue) {
     const { processedEmail } = data;

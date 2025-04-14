@@ -14,7 +14,7 @@ export class TelegramQueueProcessorService {
   private readonly logger = new Logger(TelegramQueueProcessorService.name);
 
   constructor(
-    @InjectQueue(QUEUE_TABLE_KEYS.TELEGRAM.OUTGOING)
+    //   @InjectQueue(QUEUE_TABLE_KEYS.TELEGRAM.OUTGOING)
     private readonly telegramBotService: TelegramBotService,
   ) {}
 

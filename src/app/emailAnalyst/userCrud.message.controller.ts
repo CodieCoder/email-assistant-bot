@@ -1,8 +1,9 @@
-import { Controller } from '@nestjs/common';
+import { Controller, UseGuards } from '@nestjs/common';
 import { Crud } from '@dataui/crud';
 import { MessageDtoClass } from './dtos/message.dto';
 import { UserCrudMessageService } from './userCrud.message.service';
 import { COMMON_CRUD_OPTIONS } from 'src/lib/constants';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Crud({
   ...COMMON_CRUD_OPTIONS,
@@ -20,6 +21,7 @@ import { COMMON_CRUD_OPTIONS } from 'src/lib/constants';
     },
   },
 })
+@UseGuards(AuthGuard)
 @Controller('user/messages')
 export class MessageUserCrudController {
   constructor(public service: UserCrudMessageService) {}

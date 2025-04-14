@@ -3,6 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MessageEntity } from './entities/message.entity';
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
+import {
+  CrudRequest,
+  GetManyDefaultResponse,
+  QueryFilterOption,
+} from '@dataui/crud';
+import { IJwtUserPayload } from '../user/dtos/user.dto';
 
 @Injectable()
 export class UserCrudMessageService extends TypeOrmCrudService<MessageEntity> {
@@ -13,16 +19,34 @@ export class UserCrudMessageService extends TypeOrmCrudService<MessageEntity> {
   }
 
   async getMany(
-    req: any,
-    relations: string[] = [],
-    query: any = {},
-  ): Promise<MessageEntity[]> {
-    const userId = req?.user?.id;
+    req: CrudRequest<{ user: IJwtUserPayload }, any>,
+  ): Promise<GetManyDefaultResponse<MessageEntity> | MessageEntity[]> {
+    const userId = req?.auth?.user?.id;
+
     if (!userId) {
       throw new UnauthorizedException({ description: 'Invalid user' });
     }
 
-    query.where = { ...(query.where || {}), userId };
-    return super.getMany(req, relations, query);
+    if (!req.options?.query) {
+      return super.getMany(req);
+    }
+
+    const userFilter: QueryFilterOption = {
+      field: 'userId',
+      operator: '$eq' as any,
+      value: userId,
+    };
+
+    req.options.query.filter = [
+      ...(Array.isArray(req.options.query.filter)
+        ? req.options.query.filter.filter(
+            (filter): filter is any => filter !== undefined,
+          )
+        : [req.options.query.filter].filter(
+            (filter): filter is any => filter !== undefined,
+          )),
+      userFilter,
+    ];
+    return super.getMany(req);
   }
 }

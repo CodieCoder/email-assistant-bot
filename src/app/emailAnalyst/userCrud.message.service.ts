@@ -11,36 +11,4 @@ export class UserCrudMessageService extends TypeOrmCrudService<MessageEntity> {
   ) {
     super(repo);
   }
-
-  // async getMany(
-  //   req: CrudRequest<{ user: IJwtUserPayload }, any>,
-  // ): Promise<GetManyDefaultResponse<MessageEntity> | MessageEntity[]> {
-  //   const userId = req?.auth?.user?.id;
-
-  //   if (!userId) {
-  //     throw new UnauthorizedException({ description: 'Invalid user' });
-  //   }
-
-  //   if (!req.options?.query) {
-  //     return super.getMany(req);
-  //   }
-
-  //   const userFilter: QueryFilterOption = {
-  //     field: 'userId',
-  //     operator: '$eq' as any,
-  //     value: userId,
-  //   };
-
-  //   req.options.query.filter = [
-  //     ...(Array.isArray(req.options.query.filter)
-  //       ? req.options.query.filter.filter(
-  //           (filter): filter is any => filter !== undefined,
-  //         )
-  //       : [req.options.query.filter].filter(
-  //           (filter): filter is any => filter !== undefined,
-  //         )),
-  //     userFilter,
-  //   ];
-  //   return super.getMany(req);
-  // }
 }

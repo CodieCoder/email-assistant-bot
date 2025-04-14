@@ -25,8 +25,8 @@ export const COMMON_CRUD_OPTIONS: Partial<CrudOptions> = {
     exclude: PROTECTED_PROPERTIES,
     sort: [
       {
-        field: 'createdAt', // The field to sort by
-        order: 'DESC', // Sort direction: DESC for descending (newest first)
+        field: 'createdAt',
+        order: 'DESC',
       },
     ],
   },

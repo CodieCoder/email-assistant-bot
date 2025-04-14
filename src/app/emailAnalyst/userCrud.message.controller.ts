@@ -1,12 +1,12 @@
 import { Controller, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Crud } from '@dataui/crud';
+import { Crud, CrudAuth } from '@dataui/crud';
 import { MessageDtoClass } from './dtos/message.dto';
 import { UserCrudMessageService } from './userCrud.message.service';
 import { COMMON_CRUD_OPTIONS } from 'src/lib/constants';
 import { AuthGuard } from '../auth/auth.guard';
 import { UserFilterInterceptor } from 'src/lib/interceptors/userFilterInterceptor';
+import { IJwtUserPayload } from '../user/dtos/user.dto';
 
-@UseGuards(AuthGuard)
 @UseInterceptors(UserFilterInterceptor)
 @Crud({
   ...COMMON_CRUD_OPTIONS,
@@ -22,6 +22,15 @@ import { UserFilterInterceptor } from 'src/lib/interceptors/userFilterIntercepto
       sender: { eager: true, select: true },
       company: { eager: true },
     },
+  },
+})
+@CrudAuth({
+  property: 'user',
+  filter: (user: IJwtUserPayload) => {
+    return {
+      userId: user.id,
+      isEnabled: true,
+    };
   },
 })
 @Controller('user/messages')

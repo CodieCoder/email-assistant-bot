@@ -3,6 +3,7 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  Logger,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { IJwtUserPayload } from 'src/app/user/dtos/user.dto';
@@ -13,9 +14,8 @@ export class UserFilterInterceptor implements NestInterceptor {
     const req = context
       .switchToHttp()
       .getRequest<{ [x: string]: any; user: IJwtUserPayload }>();
-    if (req.user && req.query) {
-      req.query.filter = `userId||eq||${req.user.id}`;
-    }
+
+    //Todo some one or twos here
     return next.handle();
   }
 }

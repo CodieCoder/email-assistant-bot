@@ -6,6 +6,7 @@ import { COMMON_CRUD_OPTIONS } from 'src/lib/constants';
 import { AuthGuard } from '../auth/auth.guard';
 import { UserFilterInterceptor } from 'src/lib/interceptors/userFilterInterceptor';
 
+@UseGuards(AuthGuard)
 @UseInterceptors(UserFilterInterceptor)
 @Crud({
   ...COMMON_CRUD_OPTIONS,
@@ -23,7 +24,6 @@ import { UserFilterInterceptor } from 'src/lib/interceptors/userFilterIntercepto
     },
   },
 })
-@UseGuards(AuthGuard)
 @Controller('user/messages')
 export class MessageUserCrudController {
   constructor(public service: UserCrudMessageService) {}

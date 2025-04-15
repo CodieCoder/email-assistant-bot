@@ -18,6 +18,7 @@ import SenderModule from '../sender/sender.module';
 import { LLMModule } from '../llm/llm.module';
 import { CompanyEntity } from '../company/company.entity';
 import { REDIS_DB_CONFIG } from 'src/config/database/redis.config.database';
+import Redis from 'ioredis';
 
 @Module({
   imports: [
@@ -27,6 +28,24 @@ import { REDIS_DB_CONFIG } from 'src/config/database/redis.config.database';
       UserEntity,
       TelegramAccountEntity,
     ]),
+    BullModule.forRootAsync({
+      useFactory: () => {
+        const redisClient = new Redis();
+
+        return {
+          createClient: (type) => {
+            switch (type) {
+              case 'client':
+                return redisClient;
+              case 'subscriber':
+                return redisClient.duplicate();
+              default:
+                return new Redis();
+            }
+          },
+        };
+      },
+    }),
     BullModule.forRootAsync({
       useFactory: () => ({
         redis: REDIS_DB_CONFIG(),

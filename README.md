@@ -20,6 +20,7 @@ Email Assistant is an intelligent email processing tool built with **NestJS**, *
 
 - **NestJS** - Scalable Node.js framework.
 - **TypeScript** - Enhances code quality with static typing.
+- - **BullMQ** - Used for queueing tasks.
 - **Groq API** - LLM API for natural language processing.
 - **PostgreSQL** - Relational database for storing email data.
 - **TypeORM** - ORM for database interactions.

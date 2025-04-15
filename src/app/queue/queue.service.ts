@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import {
@@ -16,7 +16,7 @@ import {
  * @description : This service is responsible for adding emails to the queue
  */
 @Injectable()
-export class QueueService {
+export class QueueService implements OnModuleDestroy {
   constructor(
     @InjectQueue(QUEUE_TABLE_KEYS.EMAIL.NEW) private emailQueue: Queue,
     @InjectQueue(QUEUE_TABLE_KEYS.TELEGRAM.INCOMING)
@@ -63,5 +63,11 @@ export class QueueService {
 
   private logger(...args: any[]) {
     this.loggerService.log('--- QUEUE SERVICE --- :  ', ...args);
+  }
+
+  async onModuleDestroy() {
+    await this.emailQueue.close();
+    await this.telegramIncomingQueue.close();
+    this.telegramOutgoingQueue.close();
   }
 }

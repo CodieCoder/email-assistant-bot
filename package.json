@@ -41,6 +41,7 @@
     "class-validator": "^0.14.1",
     "email-addresses": "^5.0.0",
     "groq-sdk": "^0.17.0",
+    "html-to-text": "^9.0.5",
     "imap": "^0.8.19",
     "mailparser": "^3.7.2",
     "passport": "^0.7.0",

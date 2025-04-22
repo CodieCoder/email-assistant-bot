@@ -43,6 +43,7 @@ export class QueueService implements OnModuleDestroy {
       );
     } catch (error) {
       this.logger('Error adding to Telegram queue failed. ', error);
+      throw new Error('Failed to add Telegram Incoming message to queue');
     }
   }
 
@@ -58,6 +59,7 @@ export class QueueService implements OnModuleDestroy {
       );
     } catch (error) {
       this.logger('Error adding to Telegram queue failed. ', error);
+      throw new Error('Failed to add Telegram Outgoing message to queue');
     }
   }
 
@@ -66,8 +68,14 @@ export class QueueService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    await this.emailQueue.close();
-    await this.telegramIncomingQueue.close();
-    this.telegramOutgoingQueue.close();
+    try {
+      await this.emailQueue.close();
+      await this.telegramIncomingQueue.close();
+      this.telegramOutgoingQueue.close();
+      this.logger('All queues closed successfully');
+    } catch (error) {
+      this.logger('Error closing queues:', error.message);
+      throw new Error('Failed to close queues');
+    }
   }
 }

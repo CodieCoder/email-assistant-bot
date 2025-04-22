@@ -37,15 +37,16 @@ import Redis, { RedisOptions } from 'ioredis';
           maxRetriesPerRequest: null,
         };
         const redis = new Redis(redisOptions);
+
         return {
           createClient: (type) => {
             switch (type) {
               case 'client':
-                return redis;
+                return new Redis(redisOptions);
               case 'subscriber':
-                return redis;
+                return new Redis(redisOptions);
               default:
-                return redis;
+                return new Redis(redisOptions);
             }
           },
         };

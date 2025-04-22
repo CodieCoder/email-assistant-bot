@@ -19,6 +19,7 @@ import { LLMModule } from '../llm/llm.module';
 import { CompanyEntity } from '../company/company.entity';
 import { REDIS_DB_CONFIG } from 'src/config/database/redis.config.database';
 import Redis, { RedisOptions } from 'ioredis';
+import { QueueMonitor } from './queue.monitor';
 
 @Module({
   imports: [
@@ -36,7 +37,6 @@ import Redis, { RedisOptions } from 'ioredis';
           enableReadyCheck: false,
           maxRetriesPerRequest: null,
         };
-        const redis = new Redis(redisOptions);
 
         return {
           createClient: (type) => {
@@ -73,7 +73,8 @@ import Redis, { RedisOptions } from 'ioredis';
     TelegramBotService,
     MessageService,
     UserService,
+    QueueMonitor,
   ],
-  exports: [QueueService, BullModule],
+  exports: [QueueService, BullModule, QueueMonitor],
 })
 export class QueueModule {}

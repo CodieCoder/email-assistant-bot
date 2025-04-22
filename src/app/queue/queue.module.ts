@@ -18,6 +18,7 @@ import SenderModule from '../sender/sender.module';
 import { LLMModule } from '../llm/llm.module';
 import { CompanyEntity } from '../company/company.entity';
 import { REDIS_DB_CONFIG } from 'src/config/database/redis.config.database';
+import Redis, { RedisOptions } from 'ioredis';
 
 @Module({
   imports: [
@@ -27,11 +28,28 @@ import { REDIS_DB_CONFIG } from 'src/config/database/redis.config.database';
       UserEntity,
       TelegramAccountEntity,
     ]),
-
     BullModule.forRootAsync({
-      useFactory: () => ({
-        redis: REDIS_DB_CONFIG(),
-      }),
+      useFactory: () => {
+        const options = REDIS_DB_CONFIG();
+        const redisOptions: RedisOptions = {
+          ...options,
+          enableReadyCheck: false,
+          maxRetriesPerRequest: null,
+        };
+        const redis = new Redis(redisOptions);
+        return {
+          createClient: (type) => {
+            switch (type) {
+              case 'client':
+                return redis;
+              case 'subscriber':
+                return redis;
+              default:
+                return redis;
+            }
+          },
+        };
+      },
     }),
     BullModule.registerQueue(
       { name: QUEUE_TABLE_KEYS.EMAIL.NEW },

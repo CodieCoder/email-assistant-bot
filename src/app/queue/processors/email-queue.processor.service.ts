@@ -1,7 +1,7 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job, Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import {
   QUEUE_PROCESS_KEYS,
   QUEUE_TABLE_KEYS,
@@ -15,7 +15,7 @@ import { MessageService } from '../../emailAnalyst/message.service';
  */
 @Processor(QUEUE_TABLE_KEYS.EMAIL.NEW)
 @Injectable()
-export class EmailQueueProcessorService {
+export class EmailQueueProcessorService implements OnModuleDestroy {
   constructor(
     @InjectQueue(QUEUE_PROCESS_KEYS.EMAIL.PROCESSED)
     private processedEmailQueue: Queue,
@@ -40,5 +40,9 @@ export class EmailQueueProcessorService {
     );
 
     return { processedEmail, user: queueData.user };
+  }
+
+  async onModuleDestroy() {
+    this.processedEmailQueue.close();
   }
 }

@@ -63,7 +63,7 @@ class LLMService {
       text = content.text;
     }
 
-    //Also apply basic cleanup by removing excessive whitespace and newlines
+    // Remove excessive whitespace and newlines
     text = text
       .replace(/\s\s+/g, ' ')
       .replace(/(\r\n|\n|\r){3,}/g, '\n\n')

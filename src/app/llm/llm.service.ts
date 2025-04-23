@@ -213,7 +213,7 @@ ${processedContent}
       {} as TAISenderTagObject,
     );
 
-    return `You are an advanced email analysis assistant. Your role is to analyze email content in the context of the sender's history and provide structured insights as indicated in the provided JSON schema. Use the provided sender summary, recent messages, and email content to generate a detailed response.
+    return `You are my advanced email analysis assistant. Your role is to analyze email content for me using the context of the sender's history and provide structured insights as indicated in the provided JSON schema. Use the provided sender summary, recent messages, and email content to generate a detailed response.
 
 Your response must follow this JSON schema:
 {
@@ -246,7 +246,7 @@ Your response must follow this JSON schema:
   }
 }
 
-Ensure your response is valid JSON and adheres to the schema. Be concise but thorough in your analysis.`;
+Ensure your response is valid JSON and adheres to the schema. Be concise but thorough in your analysis and be friendly too.`;
   }
 }
 

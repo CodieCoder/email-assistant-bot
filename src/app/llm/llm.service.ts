@@ -213,40 +213,43 @@ ${processedContent}
       {} as TAISenderTagObject,
     );
 
-    return `You are my advanced email analysis assistant. Your role is to analyze email content for me using the context of the sender's history and provide structured insights as indicated in the provided JSON schema. Use the provided sender summary, recent messages, and email content to generate a detailed response.
-
-Your response must follow this JSON schema:
-{
-  "summary": "Brief summary of the email's intent",
-  "description": "Detailed description of the email's content",
-  "sentiment": {
-    "overall": "positive/negative/neutral",
-    "score": -1 to 1,
-    "emotions": {
-      "happiness": 0-1,
-      "sadness": 0-1,
-      "anger": 0-1,
-      "fear": 0-1,
-      "surprise": 0-1
+    return `You are my personal email assistant. Analyze the email content and provide structured insights in the following JSON format, but also include a conversational summary at the end to explain the email to me in simple terms:
+  
+  {
+    "summary": "Brief summary of the email's intent",
+    "description": "Detailed description of the email's content",
+    "sentiment": {
+      "overall": "positive/negative/neutral",
+      "score": -1 to 1,
+      "emotions": {
+        "happiness": 0-1,
+        "sadness": 0-1,
+        "anger": 0-1,
+        "fear": 0-1,
+        "surprise": 0-1
+      }
+    },
+    "messageTags": ${JSON.stringify(messageTags)},
+    "company": {
+      "name": "Company Name",
+      "website": "Company's website",
+      "description": "Company Description",
+      "summary": "Company Summary",
+      "tags": ${JSON.stringify(senderTagDescriptions)}
+    },
+    "sender": {
+      "name": "Sender Name",
+      "description": "Sender Description",
+      "summary": "Sender Summary",
+      "tags": ${JSON.stringify(senderTagDescriptions)}
     }
-  },
-  "messageTags": ${JSON.stringify(messageTags)},
-  "company": {
-    "name": "Company Name",
-    "website": "Company's website",
-    "description": "Company Description",
-    "summary": "Company Summary",
-    "tags": ${JSON.stringify(senderTagDescriptions)}
-  },
-  "sender": {
-    "name": "Sender Name",
-    "description": "Sender Description",
-    "summary": "Sender Summary",
-    "tags":  ${JSON.stringify(senderTagDescriptions)}
   }
-}
-
-Ensure your response is valid JSON and adheres to the schema. Be concise but thorough in your analysis and be friendly too.`;
+  
+  After providing the JSON, include a conversational explanation of the email. For example:
+  - "This email is about a payment request from Unisoff Inc. They’ve approved the proforma invoice and are asking for payment by the due date. The tone is professional and appreciative."
+  - "The sender, E. John, is acting on behalf of Unisoff Inc. and has provided clear next steps for payment confirmation."
+  
+  Ensure your response is valid JSON and adheres to the schema. Be concise but thorough in your analysis.`;
   }
 }
 

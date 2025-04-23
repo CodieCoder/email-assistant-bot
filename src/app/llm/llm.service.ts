@@ -213,6 +213,22 @@ ${processedContent}
       {} as TAISenderTagObject,
     );
 
+    //Today's date so the LLM is aware of the current date
+    const today = new Date();
+    const date = today.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const time = today.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+
+    const formattedDateTime = `${date} ${time}`;
+
     return `You are my personal email assistant. Analyze the email content and provide structured insights in the following JSON format, but also include a conversational summary at the end to explain the email to me in simple terms:
   
   {
@@ -248,6 +264,8 @@ ${processedContent}
   After providing the JSON, include a conversational explanation of the email. For example:
   - "This email is about a payment request from Unisoff Inc. They’ve approved the proforma invoice and are asking for payment by the due date. The tone is professional and appreciative."
   - "The sender, E. John, is acting on behalf of Unisoff Inc. and has provided clear next steps for payment confirmation."
+
+  Todays' date is : ${formattedDateTime}
   
   Ensure your response is valid JSON and adheres to the schema. Be concise but thorough in your analysis.`;
   }

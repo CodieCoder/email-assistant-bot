@@ -229,11 +229,11 @@ ${processedContent}
 
     const formattedDateTime = `${date} ${time}`;
 
-    return `You are my personal email assistant. Analyze the email content and provide structured insights in the following JSON format, but also include a conversational summary at the end to explain the email to me in simple terms:
+    return `You are my personal email assistant. Analyze the email content and provide structured insights in the following JSON format:
   
   {
     "summary": "Brief summary of the email's intent",
-    "description": "Detailed description of the email's content",
+    "description": "Give me detailed description of the email's content. Make your tone personal and casual",
     "sentiment": {
       "overall": "positive/negative/neutral",
       "score": -1 to 1,

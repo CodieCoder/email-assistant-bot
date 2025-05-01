@@ -33,6 +33,50 @@ class LLMService {
   }
 
   /**
+   * Analyzes an email using the LLM service.
+   * @param content - The email content to analyze.
+   * @param context - The context of the sender's history.
+   * @returns The LLM response as a structured object.
+   */
+  async analyzeEmail(
+    content: EmailMessageDto,
+    context: IMessageContext,
+  ): Promise<ILLMResponse> {
+    try {
+      const processedContent = this.preprocessEmailContent(content);
+      const model = getEnvVar('GROQ_MODEL_MODEL') || 'llama3-8b-8192';
+      const prompt = this.buildPrompt(processedContent, content, context);
+
+      const completion = await this.groqClient.chat.completions.create({
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: this.getSystemPrompt() },
+          { role: 'user', content: prompt },
+        ],
+        model,
+      });
+
+      const response = completion.choices[0]?.message?.content;
+
+      if (!response) {
+        throw new InternalServerErrorException('No response from AI');
+      }
+
+      return this.parseResponse(response);
+    } catch (error) {
+      const message = 'Error during Groq API call';
+      this.logger.error({
+        message,
+        context: this.analyzeEmail.name,
+        trace: error.message,
+        emailSubject: content.subject,
+      });
+
+      throw new InternalServerErrorException(message);
+    }
+  }
+
+  /**
    * Preprocesses email content to strip HTML and truncate if necessary.
    * @param content - Email DTO.
    * @returns Cleaned and potentially truncated text content.
@@ -80,50 +124,6 @@ class LLMService {
     }
 
     return text || 'No content available';
-  }
-
-  /**
-   * Analyzes an email using the LLM service.
-   * @param content - The email content to analyze.
-   * @param context - The context of the sender's history.
-   * @returns The LLM response as a structured object.
-   */
-  async analyzeEmail(
-    content: EmailMessageDto,
-    context: IMessageContext,
-  ): Promise<ILLMResponse> {
-    try {
-      const processedContent = this.preprocessEmailContent(content);
-      const model = getEnvVar('GROQ_MODEL_MODEL') || 'llama3-8b-8192';
-      const prompt = this.buildPrompt(processedContent, content, context);
-
-      const completion = await this.groqClient.chat.completions.create({
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: this.getSystemPrompt() },
-          { role: 'user', content: prompt },
-        ],
-        model,
-      });
-
-      const response = completion.choices[0]?.message?.content;
-
-      if (!response) {
-        throw new InternalServerErrorException('No response from AI');
-      }
-
-      return this.parseResponse(response);
-    } catch (error) {
-      const message = 'Error during Groq API call';
-      this.logger.error({
-        message,
-        context: this.analyzeEmail.name,
-        trace: error.message,
-        emailSubject: content.subject,
-      });
-
-      throw new InternalServerErrorException(message);
-    }
   }
 
   /**

@@ -10,7 +10,7 @@ export class AppService {
   constructor(private readonly messageService: MessageService) {}
 
   getHello(): string {
-    return 'Hello World!';
+    return 'Hello World! Server is running.';
   }
 
   async testMessage(emailMessage: EmailMessageDto, userInfo: IJwtUserPayload) {

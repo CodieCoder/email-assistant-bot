@@ -18,8 +18,6 @@ class ConfigService {
   }
 }
 
-// Instantiate the ConfigService
-
 // Export specific environment variables
 export const getEnvVar = (key: string, defaultValue?: string): string => {
   const configService = new ConfigService();
@@ -29,4 +27,3 @@ export const getEnvVar = (key: string, defaultValue?: string): string => {
 
   return configService.getOptional(key, defaultValue);
 };
-// Export the ConfigService instance for other uses

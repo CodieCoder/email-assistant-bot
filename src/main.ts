@@ -30,8 +30,8 @@ async function bootstrap() {
     .build();
 
   app.enableCors({
-    origin: ALLOWED_IPS,
-    methods: 'GET,POST, PATCH',
+    origin: ['http://localhost:3000', ...(ALLOWED_IPS || [])],
+    methods: ['GET', 'POST', 'PATCH'],
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
@@ -46,4 +46,13 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 8000);
 }
 
-bootstrap();
+bootstrap()
+  .then(() => {
+    console.log(
+      `Application is running on: http://localhost:${process.env.PORT}`,
+    );
+  })
+  .catch((error) => {
+    console.error('Failed to start application:', error);
+    process.exit(1);
+  });

@@ -4,25 +4,20 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import POSTGRES_DB_CONFIG from './config/database/postgres.config.database';
 import { ConfigModule } from '@nestjs/config';
-import SenderModule from './app/sender/sender.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { CustomLoggerModule } from './lib/logger/logger.module';
-import { CustomLoggerService } from './lib/logger/logger.service';
-import { EmailAccountModule } from './app/emailAccount/email-account.module';
-import { UserModule } from './app/user/user.module';
-import { AuthModule } from './app/auth/auth.module';
-import { MessageModule } from './app/emailAnalyst/message.module';
-import { LoggingInterceptor } from './lib/logger/logging.interceptor';
-import { SystemModule } from './app/system/system.module';
-import { QueueMonitor } from './app/queue/queue.monitor';
-import { QueueModule } from './app/queue/queue.module';
+import SenderModule from './modules/sender/sender.module';
+import { EmailAccountModule } from './modules/emailAccount/email-account.module';
+import { UserModule } from './modules/user/user.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { MessageModule } from './modules/emailAnalyst/message.module';
+import { SystemModule } from './modules/system/system.module';
+import { QueueMonitor } from './modules/queue/queue.monitor';
+import { QueueModule } from './modules/queue/queue.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env', '.env.dev', '.env.local'],
-      
     }),
     TypeOrmModule.forRootAsync({
       useFactory: () => {
@@ -35,22 +30,11 @@ import { QueueModule } from './app/queue/queue.module';
     SenderModule,
     MessageModule,
     EmailAccountModule,
-    CustomLoggerModule,
     SystemModule,
     QueueModule,
   ],
   controllers: [AppController],
-  providers: [
-    {
-      provide: CustomLoggerService,
-      useClass: CustomLoggerService,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: LoggingInterceptor,
-    },
-    AppService,
-  ],
+  providers: [AppService],
   exports: [],
 })
 export class AppModule {

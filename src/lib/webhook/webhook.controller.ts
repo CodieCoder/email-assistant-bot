@@ -9,7 +9,7 @@ export class WebhookController {
   @Post('telegram')
   async handleTelegramUpdate(
     @Body() body: TelegramChatWebhookDto,
-  ): Promise<void> {
+  ): Promise<TelegramChatWebhookDto> {
     return await this.webhookService.telegramWebhook(body);
   }
 }

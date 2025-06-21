@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { TelegramAccountEntity } from 'src/app/telegram/entities/telegram.entity';
+import { TelegramAccountEntity } from 'src/modules/telegram/entities/telegram.entity';
 import { TelegramChatWebhookDto } from '../dtos/webhook';
-import { QueueService } from 'src/app/queue/queue.service';
-import { TelegramService } from 'src/app/telegram/telegram.service';
+import { QueueService } from 'src/modules/queue/queue.service';
+import { TelegramService } from 'src/modules/telegram/telegram.service';
 
 @Injectable()
 export class WebhookService {
@@ -11,10 +11,12 @@ export class WebhookService {
     private readonly telegramService: TelegramService,
   ) {}
 
-  async telegramWebhook(body: TelegramChatWebhookDto): Promise<any> {
+  async telegramWebhook(
+    body: TelegramChatWebhookDto,
+  ): Promise<TelegramChatWebhookDto> {
     const { message } = body;
-    const { text, chat } = message;
-    const { id: chatId, username } = chat;
+    const { chat } = message;
+    const { id: chatId } = chat;
     const telegramAccount = await this.validateTelegramAccount(String(chatId));
 
     if (!telegramAccount) {
@@ -22,10 +24,10 @@ export class WebhookService {
     }
 
     //Add to queue
-    const payload = {
-      chatId: chatId,
-      text,
-    };
+    // const payload = {
+    //   chatId: chatId,
+    //   text,
+    // };
 
     // await this.queueService.addTelegramToQueue(payload);
 

@@ -1,6 +1,6 @@
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { DataSourceOptions } from 'typeorm';
 
-const POSTGRES_DB_CONFIG: () => TypeOrmModuleOptions = () => ({
+const POSTGRES_DB_CONFIG: () => DataSourceOptions = () => ({
   type: 'postgres',
   // host: process.env.POSTGRES_HOST,
   // port: parseInt(process.env.POSTGRES_PORT || '5432'),
@@ -8,10 +8,10 @@ const POSTGRES_DB_CONFIG: () => TypeOrmModuleOptions = () => ({
   // password: process.env.POSTGRES_PASSWORD,
   // database: process.env.POSTGRES_DB,
   url: process.env.POSTGRES_DATABASE_URL,
-  synchronize: true,
+  synchronize: false, // DON'T EVER CHANGE THIS!!!!
   logging: false,
   // entities: ['src/entities/**/*.ts'],
-  migrations: ['src/migration/**/*.ts'],
+  migrations: ['src/migrations/**/*.ts'],
   subscribers: ['src/subscriber/**/*.ts'],
   useUTC: true,
   autoLoadEntities: true,

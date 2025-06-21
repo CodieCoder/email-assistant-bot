@@ -1,5 +1,5 @@
 import { CrudOptions } from '@dataui/crud';
-import { CompanyEntity } from 'src/app/company/company.entity';
+import { DomainEntity } from 'src/modules/domain/domain.entity';
 
 export const PROTECTED_PROPERTIES = [
   'authToken',
@@ -32,7 +32,7 @@ export const COMMON_CRUD_OPTIONS: Partial<CrudOptions> = {
   },
 };
 
-export const COMMON_COMPANY_DETAILS: Partial<CompanyEntity>[] = [
+export const COMMON_DOMAIN_DETAILS: Partial<DomainEntity>[] = [
   {
     name: 'Google',
     emailDomain: 'gmail.com',

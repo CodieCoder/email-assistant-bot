@@ -1,4 +1,4 @@
-import { TelegramCommandEnum } from 'src/app/telegram/dtos/telegram.dto';
+import { TelegramCommandEnum } from 'src/modules/telegram/dtos/telegram.dto';
 
 export interface ITelegramIncomingMessageQueue {
   ctx: any;

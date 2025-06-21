@@ -1,6 +1,6 @@
-import { IsEmail, IsNotEmpty, IsObject, IsString } from 'class-validator';
-import { IAITagReportObject } from '../../app/llm/dtos/llm.dto';
-import { IJwtUserPayload } from '../../app/user/dtos/user.dto';
+import { IsNotEmpty, IsObject, IsString } from 'class-validator';
+import { IAITagReportObject } from '../../modules/llm/dtos/llm.dto';
+import { IJwtUserPayload } from '../../modules/user/dtos/user.dto';
 
 export class EmailMessageDto {
   @IsString()

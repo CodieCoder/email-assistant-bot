@@ -1,1 +1,1 @@
-export * from './company.utils';
+export * from './domain.utils';

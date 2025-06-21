@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { EmailMessageDto } from './lib/dtos/index.js';
-import { MessageService } from './app/emailAnalyst/message.service';
-import { IJwtUserPayload } from './app/user/dtos/user.dto';
+import { EmailMessageDto, IProcessedEmailMessage } from './lib/dtos/index.js';
+import { MessageService } from './modules/emailAnalyst/message.service.js';
+import { IJwtUserPayload } from './modules/user/dtos/user.dto.js';
 
-type ProcessedEmail = any;
+type ProcessedEmail = IProcessedEmailMessage;
 
 @Injectable()
 export class AppService {
@@ -22,27 +22,33 @@ export class AppService {
     return processedEmail;
   }
 
-  async handleEmail(email: ProcessedEmail) {
-    switch (email.tag) {
+  handleEmail(email: ProcessedEmail) {
+    switch (email.tags[0]) {
       case 'Purchase':
-        await this.handlePurchase(email);
+        this.handlePurchase(email);
         break;
       case 'Payment':
-        await this.handlePayment(email);
+        this.handlePayment(email);
         break;
       // Add other cases
     }
   }
 
-  private async handlePurchase(email: ProcessedEmail) {
-    if (email.aiReport.purchase.confidence >= 7) {
-      //...
-    }
+  private handlePurchase(email: ProcessedEmail) {
+    // if (email.aiReport.purchase.confidence >= 7) {
+    //   //...
+    // }
+
+    console.log(email);
+    return email;
   }
 
-  private async handlePayment(email: ProcessedEmail) {
-    if (email.aiReport.payment.confidence >= 7) {
-      //....
-    }
+  private handlePayment(email: ProcessedEmail) {
+    // if (email.aiReport.payment.confidence >= 7) {
+    //   //....
+    // }
+
+    console.log(email);
+    return email;
   }
 }

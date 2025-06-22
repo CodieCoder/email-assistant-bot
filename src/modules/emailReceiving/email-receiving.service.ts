@@ -1,14 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as Imap from 'imap';
-import { simpleParser } from 'mailparser';
+import {
+  AddressObject,
+  EmailAddress,
+  ParsedMail,
+  simpleParser,
+  Source,
+} from 'mailparser';
 import { EmailAccountConfigType } from '../emailAccount/dtos/email-account.dto';
 import { EmailAccountEntity } from '../emailAccount/entities/email-account.entity';
 
-import { EmailMessageDto, IEmailAddressWithName } from 'src/lib/dtos';
+import { EmailMessageDto } from 'src/lib/dtos';
 import { QueueService } from '../queue/queue.service';
 import { IJwtUserPayload } from '../user/dtos/user.dto';
-const fs = require('fs');
-const path = require('path');
+import { BoxTypes } from './dtos';
 
 @Injectable()
 export class EmailReceivingService {
@@ -20,16 +25,16 @@ export class EmailReceivingService {
   async fetchEmails(
     config: EmailAccountEntity,
     user: IJwtUserPayload,
-  ): Promise<any> {
+  ): Promise<void> {
     switch (config.configType) {
       case EmailAccountConfigType.IMAP:
         await this.fetchEmailsViaImap(config, user);
         break;
       case EmailAccountConfigType.API:
-        await this.fetchEmailsViaApi(config);
+        this.fetchEmailsViaApi(config);
         break;
       case EmailAccountConfigType.OAUTH:
-        await this.fetchEmailsViaOauth(config);
+        this.fetchEmailsViaOauth(config);
         break;
       default:
         throw new Error('Unsupported email config type');
@@ -37,141 +42,179 @@ export class EmailReceivingService {
   }
 
   // Handle fetching emails via IMAP
-  private async fetchEmailsViaImap(config: EmailAccountEntity, user) {
-    this.logger.log('Fetching emails via IMAP');
+  private async fetchEmailsViaImap(
+    config: EmailAccountEntity,
+    user: IJwtUserPayload,
+  ): Promise<void> {
+    this.logger.log(
+      `EMAIL FETCHER : Attempting to fetch emails via IMAP for user: ${user.email}`,
+    );
 
-    const imap = new Imap({
-      user: config.imapUsername,
-      password: config.imapPassword,
-      host: config.imapHost,
-      port: config.imapPort,
-      tls: config.imapSecure,
-    });
+    return new Promise((resolve, reject) => {
+      const imap = new Imap({
+        user: config.imapUsername,
+        password: config.imapPassword,
+        host: config.imapHost,
+        port: config.imapPort,
+        tls: config.imapSecure,
+      });
 
-    // this.logger.log('IMAP CONFIG : ', imap);
-
-    imap.once('ready', () => {
-      this.logger.log('Opening inbox');
-      imap.openBox('INBOX', true, (err, box) => {
-        this.logger.log('Opened inbox');
-        if (err) throw err;
-        this.logger.log('Searching for unseen emails');
-        imap.search(['UNSEEN'], (err, results) => {
-          if (err) throw err;
-          this.logger.log('Unread emails found : ', results || 0);
-          if (!results?.length) {
-            return;
+      imap.once('ready', () => {
+        this.logger.log(
+          'EMAIL FETCHER : IMAP connection ready. Opening INBOX.',
+        );
+        imap.openBox(BoxTypes.INBOX, true, (err, box) => {
+          const unreadEmails = box.messages.unseen;
+          if (err) {
+            this.logger.error(
+              `EMAIL FETCHER : Error opening INBOX: ${err.message}`,
+              err.stack,
+            );
+            imap.end();
+            return reject(err);
           }
-          const fetch = imap.fetch(results, { bodies: '' });
-          fetch.on('message', async (msg) => {
-            msg.on('body', (stream) => {
-              simpleParser(stream, async (err, parsed) => {
-                if (err) throw err;
-                //Pass it to the queue service
-                const messagePayload = this.getRelevantEmailData(parsed);
-                await this.sendEmailToQueue(messagePayload, user);
-                // Implement the email analysis or pass it to another service
+
+          if (unreadEmails === 0) {
+            this.logger.log(
+              `EMAIL FETCHER : No unread emails found in ${box.name}.`,
+            );
+            imap.end();
+            return resolve();
+          }
+
+          this.logger.log(
+            `EMAIL FETCHER : INBOX opened. Searching for ${unreadEmails} unseen emails.`,
+          );
+
+          imap.search(['UNSEEN'], (err, results) => {
+            if (err) {
+              this.logger.error(
+                `EMAIL FETCHER : Error searching for emails: ${err.message}`,
+                err.stack,
+              );
+
+              imap.end();
+              return reject(err);
+            }
+
+            this.logger.log(
+              `EMAIL FETCHER : Found ${results?.length || 0} unread emails.`,
+            );
+            if (!results?.length) {
+              imap.end();
+              return resolve();
+            }
+
+            const fetch = imap.fetch(results, { bodies: '' });
+            fetch.on('message', (msg) => {
+              msg.on('body', (stream) => {
+                void (async () => {
+                  try {
+                    const parsed: ParsedMail = await simpleParser(
+                      stream as unknown as Source,
+                    );
+                    const messagePayload = this.getRelevantEmailData(parsed);
+                    await this.sendEmailToQueue(messagePayload, user);
+                    this.logger.log(
+                      `EMAIL FETCHER : Email from ${messagePayload.from?.address} added to queue.`,
+                    );
+                  } catch (parseErr) {
+                    const error = parseErr as Error;
+                    this.logger.error(
+                      `EMAIL FETCHER : Error parsing email: ${error.message}`,
+                      error.stack,
+                    );
+                    return;
+                  }
+                })();
               });
             });
-          });
-          fetch.once('end', () => {
-            imap.end();
+
+            fetch.once('end', () => {
+              this.logger.log('EMAIL FETCHER : Finished fetching messages.');
+              imap.end();
+            });
           });
         });
       });
-    });
 
-    imap.once('error', (err) => {
-      this.logger.log('Imap hit an error');
-      this.logger.log(err);
-    });
+      imap.once('error', (err: Error) => {
+        this.logger.error(
+          `EMAIL FETCHER : IMAP connection error: ${err.message}`,
+          err.stack,
+        );
+        reject(err);
+      });
 
-    imap.once('end', () => {
-      this.logger.log('IMAP connection ended');
-    });
+      imap.once('end', () => {
+        this.logger.log('EMAIL FETCHER : IMAP connection ended.');
+        resolve(); // Resolve when connection ends (after all operations or on error)
+      });
 
-    imap.connect();
+      imap.connect();
+    });
   }
 
-  private async fetchEmailsViaApi(config: EmailAccountEntity) {
-    this.logger.log('Fetching emails via API (e.g., Gmail API)');
+  private fetchEmailsViaApi(config: EmailAccountEntity) {
+    this.logger.log(
+      'EMAIL FETCHER : Fetching emails via API (e.g., Gmail API)',
+      config,
+    );
   }
 
-  private async fetchEmailsViaOauth(config: EmailAccountEntity) {
-    this.logger.log('Fetching emails via OAuth');
+  private fetchEmailsViaOauth(config: EmailAccountEntity) {
+    this.logger.log('EMAIL FETCHER : Fetching emails via OAuth', config);
   }
 
-  private async sendEmailToQueue(
+  private sendEmailToQueue(
     message: EmailMessageDto,
-    user: IJwtUserPayload,
+    user: IJwtUserPayload, // User context for the queue
   ) {
-    this.logger.log('Sending email to queue', { message, user });
+    this.logger.log(
+      `EMAIL FETCHER : Adding email to queue: ${message.subject} from ${message.from?.address}`,
+    );
     return this.emailQueueService.addEmailToQueue({ message, user });
   }
 
-  private getRelevantEmailData(data: any): EmailMessageDto {
-    const dataString = JSON.stringify(data);
-    const parsedData: any = JSON.parse(dataString);
-
+  private getRelevantEmailData(parsedEmail: ParsedMail): EmailMessageDto {
     const emailData: EmailMessageDto = {
-      from: this.getEmailFromValues(parsedData.from),
-      to: this.getEmailFromValues(parsedData.to),
-      subject: parsedData.subject,
-      date: parsedData.date,
-      text: parsedData.text,
-      textAsHtml: parsedData.textAsHtml,
-      messageId: parsedData.messageId,
+      from: this.getEmailFromValues(parsedEmail.from),
+      to: this.getEmailFromValues(parsedEmail.to as AddressObject),
+      subject: parsedEmail.subject || '',
+      date: parsedEmail.date?.toISOString() || '',
+      text: parsedEmail.text || '',
+      textAsHtml: parsedEmail.textAsHtml || '',
+      messageId: parsedEmail.messageId || '',
+      // Ensure other relevant fields are mapped if needed
     };
 
-    this.logger.log('PARSED EMAIL DATA : ', emailData);
+    this.logger.log(
+      `EMAIL FETCHER : Parsed email data: ${JSON.stringify(emailData.from)}`,
+      emailData,
+    );
 
     return emailData;
   }
 
-  private getEmailFromValues(data: {
-    value: IEmailAddressWithName[];
-    text: string;
-  }): IEmailAddressWithName {
+  private getEmailFromValues(data?: AddressObject): EmailAddress {
     try {
-      // const userEmail = this.extractEmail(data?.text);
-      const userEmail = data?.value?.[0];
-      if (!userEmail?.address) throw new Error('No sender found');
-
-      const result = data?.value?.find(
-        ({ address }) => address === userEmail.address,
-      );
-
-      if (!result) {
-        this.logger.log({ userEmail, email: data?.value });
-        throw new Error('Email not found');
+      if (!data?.value || data.value.length === 0) {
+        throw new Error('No email address found in value array');
       }
-      return result;
-    } catch (error) {
-      this.logger.log({ text: data?.text, email: data?.value });
-      this.logger.error('Error getting email from values:', error);
+      // Return the first email address found
+      return data.value[0];
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(
+        `EMAIL FETCHER : Error getting email from values: ${errorMessage}`,
+        {
+          text: data?.text,
+          value: data?.value,
+          error,
+        },
+      );
       throw new Error('Failed to get email from values');
     }
-  }
-
-  private addToLocalFile(parsed: any) {
-    try {
-      const emailData = JSON.stringify(parsed, null, 2);
-      const filePath = path.join(__dirname, 'emails', `${Date.now()}.json`);
-
-      fs.mkdirSync(path.dirname(filePath), { recursive: true });
-      fs.writeFileSync(filePath, emailData);
-
-      this.logger.log(`Email saved to ${filePath}`);
-    } catch (error) {
-      this.logger.error('Error saving email to file:', error);
-      throw new Error('Failed to save email');
-    }
-  }
-
-  private extractEmail(text: string): string | null {
-    const emailRegex = /<([^>]+)>/;
-    const match = text.match(emailRegex);
-    // Return the email address if found, otherwise return null
-    return match ? match[1] : null;
   }
 }

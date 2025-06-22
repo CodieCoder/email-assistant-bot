@@ -9,11 +9,7 @@ import { Repository } from 'typeorm';
 import { IAIDomainObject } from 'src/modules/llm/dtos/llm.dto';
 import SenderService from '../sender/sender.service';
 import LLMService from '../llm/llm.service';
-import {
-  EmailMessageDto,
-  IEmailAddressWithName,
-  IProcessedEmailMessage,
-} from 'src/lib/dtos';
+import { EmailMessageDto, IProcessedEmailMessage } from 'src/lib/dtos';
 import { MessageEntity } from './entities/message.entity';
 import { UserService } from '../user/user.service';
 import { IJwtUserPayload, UserDto } from '../user/dtos/user.dto';
@@ -22,6 +18,7 @@ import { IMessageContext } from './dtos/message.dto';
 import { SenderEntity } from '../sender/entities/sender.entity';
 import { DomainEntity } from '../domain/domain.entity';
 import { getDomain } from 'src/lib/utils';
+import { EmailAddress } from 'mailparser';
 
 @Injectable()
 export class MessageService {
@@ -66,7 +63,7 @@ export class MessageService {
     // Process sender
     const sender = await this.getOrCreateSender(email.from);
 
-    const emailDomain = this.getEmailDomain(email.from.address);
+    const emailDomain = this.getEmailDomain(email.from.address || '');
     let domain = await this.getOrCreateDomain(emailDomain);
 
     // Build context and analyze email
@@ -95,9 +92,7 @@ export class MessageService {
     return this.formatResponse(savedMessage);
   }
 
-  private async getOrCreateSender(
-    email: IEmailAddressWithName,
-  ): Promise<SenderEntity> {
+  private async getOrCreateSender(email: EmailAddress): Promise<SenderEntity> {
     try {
       const sender = await this.senderService.getOrCreateSender(email.address);
       if (!sender?.id) {
@@ -224,7 +219,10 @@ export class MessageService {
     }
   }
 
-  private getEmailDomain(email: string): string {
+  private getEmailDomain(email?: string): string {
+    if (!email) {
+      throw new BadRequestException('Invalid email format');
+    }
     const emailParts = email.split('@');
     if (emailParts.length !== 2) {
       throw new BadRequestException('Invalid email format');

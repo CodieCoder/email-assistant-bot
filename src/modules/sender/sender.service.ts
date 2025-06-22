@@ -10,7 +10,7 @@ class SenderService {
     private readonly senderRepo: Repository<SenderEntity>,
   ) {}
 
-  async getOrCreateSender(email: string): Promise<SenderEntity> {
+  async getOrCreateSender(email?: string): Promise<SenderEntity> {
     try {
       const existingSender = await this.senderRepo.findOne({
         where: { email },

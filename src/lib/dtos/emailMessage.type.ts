@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsObject, IsString } from 'class-validator';
 import { IAITagReportObject } from '../../modules/llm/dtos/llm.dto';
 import { IJwtUserPayload } from '../../modules/user/dtos/user.dto';
+import { EmailAddress } from 'mailparser';
 
 export class EmailMessageDto {
   @IsString()
@@ -9,11 +10,11 @@ export class EmailMessageDto {
 
   @IsNotEmpty()
   @IsObject()
-  from: IEmailAddressWithName;
+  from: EmailAddress;
 
   @IsNotEmpty()
   @IsObject()
-  to: IEmailAddressWithName;
+  to: EmailAddress;
 
   @IsString()
   @IsNotEmpty()
@@ -34,7 +35,7 @@ export class EmailMessageDto {
 
 export interface IProcessedEmailMessage {
   emailId: string;
-  sender: IEmailAddressWithName;
+  sender: EmailAddress;
   subject: string;
   summary: string;
   description: string;
@@ -71,7 +72,7 @@ export enum EmailMessageTypeEnum {
   OTHER = 'other',
 }
 
-export interface IEmailAddressWithName {
-  address: string;
-  name: string;
-}
+// export interface IEmailAddressWithName {
+//   address: string;
+//   name: string;
+// }

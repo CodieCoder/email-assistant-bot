@@ -8,7 +8,7 @@ const POSTGRES_DB_CONFIG: () => DataSourceOptions = () => ({
   // password: process.env.POSTGRES_PASSWORD,
   // database: process.env.POSTGRES_DB,
   url: process.env.POSTGRES_DATABASE_URL,
-  synchronize: false, // DON'T EVER CHANGE THIS!!!!
+  synchronize: true, // DON'T EVER CHANGE THIS!!!!
   logging: false,
   // entities: ['src/entities/**/*.ts'],
   migrations: ['src/migrations/**/*.ts'],

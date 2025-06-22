@@ -27,7 +27,10 @@ export class QueueService implements OnModuleDestroy {
   ) {}
 
   async addEmailToQueue(emailData: IEmailMessageQueue) {
-    this.logger(emailData);
+    this.logger(
+      'EMAIL QUEUE : Adding email to queue',
+      emailData.message.subject,
+    );
     await this.emailQueue.add(QueueProcessEnum.ProcessEmail, emailData);
   }
 

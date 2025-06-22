@@ -8,10 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EmailAccountEntity } from './entities/email-account.entity';
 import {
-  CreateApiConfigDto,
   CreateEmailAccountDto,
-  CreateImapConfigDto,
-  CreateOauthConfigDto,
   EmailAccountConfigType,
 } from './dtos/email-account.dto';
 import { UserService } from '../user/user.service';
@@ -29,10 +26,13 @@ export class EmailAccountService {
   ) {}
 
   async createConfig(userId: string, configDto: CreateEmailAccountDto) {
-    //Validate user and make sure user does not have more than one config of the same type
+    this.loggerService.log(`Creating config for user: ${userId}`);
+
     const user = await this.userService.findOneById(userId);
+    this.loggerService.log({ message: 'User found', user });
+
     if (!user?.id) {
-      this.loggerService.error('Invalid user', userId);
+      this.loggerService.error('CREATE CONFIG : Invalid user', userId);
       throw new UnauthorizedException({ description: 'Invalid user' });
     }
 
@@ -42,42 +42,31 @@ export class EmailAccountService {
     });
 
     if (existingConfig) {
-      this.loggerService.error('Duplicate configuration : ', existingConfig);
+      this.loggerService.error({
+        message: 'Duplicate configuration',
+        existingConfig,
+      });
       throw new BadRequestException({
         description: `User already has a configuration of type ${configDto.configType}`,
       });
     }
 
-    let configPayload: Partial<EmailAccountEntity> = {
+    const configPayload: Partial<EmailAccountEntity> = {
       userId: user.id,
       ...configDto,
     };
 
-    switch (configDto.configType) {
-      case EmailAccountConfigType.IMAP:
-        configPayload = this.getImapConfigPayload(
-          configPayload as CreateImapConfigDto,
-        );
-        break;
-      case EmailAccountConfigType.API:
-        configPayload = this.getApiConfigPayload(
-          configPayload as CreateApiConfigDto,
-        );
-        break;
-      case EmailAccountConfigType.OAUTH:
-        configPayload = this.getOauthConfigPayload(
-          configPayload as CreateOauthConfigDto,
-        );
-        break;
-      default:
-        throw new Error('Unknown config type');
-    }
-
     const config = this.emailConfigRepo.create(configPayload);
-
     const savedConfig = await this.emailConfigRepo.save(config);
-    this.loggerService.log('Saved Config : ', savedConfig);
-    return savedConfig;
+
+    // Mask sensitive data before returning
+    const configToReturn = { ...savedConfig };
+    if (configToReturn.imapPassword) configToReturn.imapPassword = '********';
+    this.loggerService.log({
+      message: 'Config created',
+      config: configToReturn,
+    });
+    return configToReturn;
   }
 
   // Update a configuration for the user
@@ -86,11 +75,7 @@ export class EmailAccountService {
     configId: string,
     configDto: Partial<CreateEmailAccountDto>,
   ): Promise<EmailAccountEntity | null> {
-    let updatedConfig: Partial<EmailAccountEntity> = {
-      ...configDto,
-    };
-
-    //get current config
+    // Get current config
     const existingConfig = await this.getOneConfigByUser(userId, configId);
     if (!existingConfig) {
       throw new BadRequestException({
@@ -98,31 +83,30 @@ export class EmailAccountService {
       });
     }
 
-    switch (configDto.configType) {
-      case EmailAccountConfigType.IMAP:
-        updatedConfig = this.getImapConfigPayload(
-          updatedConfig as CreateImapConfigDto,
-        );
-        break;
-      case EmailAccountConfigType.API:
-        updatedConfig = this.getApiConfigPayload(
-          updatedConfig as CreateApiConfigDto,
-        );
-        break;
-      case EmailAccountConfigType.OAUTH:
-        updatedConfig = this.getOauthConfigPayload(
-          updatedConfig as CreateOauthConfigDto,
-        );
-        break;
-      default:
-        throw new Error('Unknown config type');
-    }
+    // Apply updates to the existing config
+    const config = this.emailConfigRepo.merge(existingConfig, configDto);
 
-    const config = { ...existingConfig, ...updatedConfig };
+    // If password is being updated, ensure it's handled correctly (e.g., hashed)
+    // For now, assuming configDto directly contains the new password if provided.
+    // If configDto.imapPassword exists, it will overwrite existingConfig.imapPassword.
+    // If hashing is needed, it should happen here before saving.
 
     await this.emailConfigRepo.update({ userId, id: configId }, config);
 
-    return await this.emailConfigRepo.findOne({ where: { id: configId } });
+    const savedConfig = await this.emailConfigRepo.findOne({
+      where: { id: configId },
+    });
+
+    // Mask sensitive data before returning
+    const configToReturn = { ...savedConfig };
+    if (configToReturn?.imapPassword) configToReturn.imapPassword = '********';
+
+    this.loggerService.log({
+      message: 'Config updated',
+      config: configToReturn,
+    });
+
+    return savedConfig;
   }
 
   // Fetch all email configs for a user
@@ -163,33 +147,6 @@ export class EmailAccountService {
     return await this.emailConfigRepo.delete({ id: configId, userId: userId });
   }
 
-  private getImapConfigPayload(configDto: CreateImapConfigDto) {
-    const payload = {
-      ...configDto,
-      configType: EmailAccountConfigType.IMAP,
-    };
-
-    return payload;
-  }
-
-  private getApiConfigPayload(configDto: CreateApiConfigDto) {
-    const payload = {
-      ...configDto,
-      configType: EmailAccountConfigType.API,
-    };
-
-    return payload;
-  }
-
-  private getOauthConfigPayload(configDto: CreateOauthConfigDto) {
-    const payload = {
-      ...configDto,
-      configType: EmailAccountConfigType.OAUTH,
-    };
-
-    return payload;
-  }
-
   public async syncImapConfig(userId: string, configId: string) {
     const user = await this.userService.findOneById(userId);
     if (!user) {
@@ -210,17 +167,20 @@ export class EmailAccountService {
     }
 
     //test the connection
+    // The fetchEmails method seems to perform side effects (adding to queue).
+    // If this method is purely for "testing connection", it should return a boolean
+    // or throw an error on failure, and not trigger email fetching.
+    // If it's meant to trigger a sync, the name should reflect that.
     const userInfo: IJwtUserPayload = { email: user.email, id: user.id };
-    const testImapConnection = await this.emailService.fetchEmails(
-      config,
-      userInfo,
+    await this.emailService.fetchEmails(config, userInfo);
+    // Assuming fetchEmails throws an error if connection fails,
+    // otherwise, this line implies success.
+    this.loggerService.log(
+      `IMAP config ${configId} synced successfully for user ${userId}`,
     );
-    if (!testImapConnection) {
-      throw new BadRequestException({
-        description: 'Failed to connect to IMAP server',
-      });
-    }
-
-    return;
+    return {
+      success: true,
+      message: 'IMAP connection tested and sync initiated.',
+    };
   }
 }

@@ -2,7 +2,7 @@ import { ValueTransformer } from 'typeorm';
 import { publicEncrypt, privateDecrypt } from 'node:crypto';
 import { getEnvVar } from 'src/config/global';
 
-const decodeKey = (key) => Buffer.from(key, 'base64').toString();
+const decodeKey = (key: string) => Buffer.from(key, 'base64').toString();
 
 export const cryptoTransformer: ValueTransformer = {
   to: (value: string) => {

@@ -44,8 +44,10 @@ export class QueueService implements OnModuleDestroy {
         QUEUE_PROCESS_KEYS.TELEGRAM.INCOMING,
         telegramData,
       );
-    } catch (error) {
-      this.logger('Error adding to Telegram queue failed. ', error);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger('Error adding to Telegram queue failed. ', errorMessage);
       throw new Error('Failed to add Telegram Incoming message to queue');
     }
   }
@@ -60,13 +62,15 @@ export class QueueService implements OnModuleDestroy {
         QUEUE_PROCESS_KEYS.TELEGRAM.OUTGOING,
         telegramData,
       );
-    } catch (error) {
-      this.logger('Error adding to Telegram queue failed. ', error);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger('Error adding to Telegram queue failed. ', errorMessage);
       throw new Error('Failed to add Telegram Outgoing message to queue');
     }
   }
 
-  private logger(...args: any[]) {
+  private logger(...args: unknown[]) {
     this.loggerService.log('--- QUEUE SERVICE --- :  ', ...args);
   }
 
@@ -76,8 +80,10 @@ export class QueueService implements OnModuleDestroy {
       await this.telegramIncomingQueue.close();
       await this.telegramOutgoingQueue.close();
       this.logger('All queues closed successfully');
-    } catch (error) {
-      this.logger('Error closing queues:', error);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger('Error closing queues:', errorMessage);
       throw new Error('Failed to close queues');
     }
   }

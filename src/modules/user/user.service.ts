@@ -47,6 +47,7 @@ export class UserService {
     if (!user) {
       return null;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userDetails } = user;
 
     return userDetails as UserDto;
@@ -62,7 +63,7 @@ export class UserService {
     if (!user) {
       return null;
     }
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userDetails } = user;
 
     return userDetails as UserDto;
@@ -100,10 +101,16 @@ export class UserService {
         return null;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...userDetails } = user;
 
       return userDetails as UserDto;
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error({ message: error.message });
+      } else {
+        this.logger.error({ message: 'Unknown error occurred' });
+      }
       const message = 'Error verifying user.';
       this.logger.error({ message });
       throw new UnauthorizedException({ message });
@@ -138,12 +145,13 @@ export class UserService {
 
       const savedUser = await this.userRepo.save(user);
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...userDetails } = savedUser;
       return userDetails as UserCreatedDto;
-    } catch (error) {
+    } catch (error: unknown) {
       let message = 'Error creating user';
-      if (error.code === '23505') {
-        throw new ConflictException({ message });
+      if (error instanceof Error) {
+        throw new ConflictException({ message: error.message });
       }
 
       message = 'Error creating user';
@@ -152,9 +160,10 @@ export class UserService {
     }
   }
 
-  public async update(userDto: UserCreateDto): Promise<UserDto> {
+  public update(userDto: UserCreateDto): UserDto {
     const user = this.userRepo.create(userDto);
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userDetails } = user;
 
     return userDetails as UserDto;
@@ -167,7 +176,7 @@ export class UserService {
   private generateVerificationToken(): string {
     try {
       return uuidv4();
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error('Error generating verification token:', error);
       throw new Error('Failed to generate verification token.');
     }
@@ -183,8 +192,13 @@ export class UserService {
       const saltRounds = parseInt(this.hashSalt, 10);
       const salt = await bcrypt.genSalt(saltRounds);
       return bcrypt.hash(password, salt);
-    } catch (error) {
-      throw new BadRequestException(error, {
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message, {
+          description: 'Internal error occurred.',
+        });
+      }
+      throw new BadRequestException('Internal error occurred.', {
         description: 'Internal error occurred.',
       });
     }

@@ -19,20 +19,20 @@ export class TelegramBotService {
 
     this.bot.command('summary', async (ctx) => {
       // Example action, can fetch email summary from DB
-      ctx.reply('Fetching your email summary... 📬');
+      await ctx.reply('Fetching your email summary... 📬');
     });
 
     this.bot.on('text', async (ctx) => {
-      ctx.reply(`You said: ${ctx.message.text}`);
+      await ctx.reply(`You said: ${ctx.message.text}`);
     });
   }
 
-  launchWebhook() {
+  async launchWebhook() {
     const domain = getEnvVar('TELEGRAM_WEBHOOK_DOMAIN');
     const port = parseInt(getEnvVar('PORT'));
     const path = 'telegram/webhook';
 
-    this.bot.launch({
+    await this.bot.launch({
       webhook: {
         domain,
         port,

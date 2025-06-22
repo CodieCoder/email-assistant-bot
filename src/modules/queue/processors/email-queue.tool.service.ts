@@ -49,8 +49,10 @@ export class EmailQueueToolService {
     //add to telegram queue
     try {
       this.logger.log('Message queued for sending to Telegram:', message);
-    } catch (error) {
-      this.logger.error('Failed to send queue message:', error);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error('Failed to send queue message:', errorMessage);
     }
 
     const payload: ITelegramOutgoingMessageQueue = {
@@ -58,6 +60,6 @@ export class EmailQueueToolService {
       message,
     };
 
-    this.queueService.addTelegramToQueueOutgoing(payload);
+    await this.queueService.addTelegramToQueueOutgoing(payload);
   }
 }

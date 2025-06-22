@@ -76,7 +76,7 @@ export class AuthService {
     }
 
     //send account verification email to user's email
-    const isEmailSent = await this.sendAccountVerificationEmail(user);
+    const isEmailSent = this.sendAccountVerificationEmail(user);
 
     if (!isEmailSent) {
       throw new Error('Unable to send account verification email');
@@ -90,15 +90,16 @@ export class AuthService {
    * @param userDto - The user registration details.
    * @returns True if the email was sent successfully, false otherwise.
    */
-  private async sendAccountVerificationEmail(
+  private sendAccountVerificationEmail(
     userCreatedDto: UserCreatedDto,
-  ): Promise<boolean> {
+  ): boolean {
     // Implement email sending logic here
     // You can use a library like Nodemailer or a third-party email service
     // to send the verification email to the user's email address.
     // Return true if the email was sent successfully, false otherwise.
 
-    const token = userCreatedDto.verificationToken;
+    // const token = userCreatedDto.verificationToken;
+    console.log(userCreatedDto);
     // Send the verification email to the user's email address
     return true;
   }
@@ -123,7 +124,7 @@ export class AuthService {
       return this.jwtService.signAsync(payload, {
         secret: getEnvVar('JWT_SECRET'),
       });
-    } catch (error) {
+    } catch {
       throw new BadRequestException('Unable to generate access token');
     }
   }

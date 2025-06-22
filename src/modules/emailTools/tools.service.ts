@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IProcessedEmailMessageQueue } from 'src/lib/dtos';
+import { IAITagReport } from '../llm/dtos/llm.dto';
 
 /**
  * @description :  This service is responsible for taking actions based on the processed email message and user's preferences.
@@ -13,27 +14,30 @@ export class ToolsService {
 
     // Iterate over the tags and their confidence levels
     for (const [tag, report] of Object.entries(processedEmail.tags)) {
-      const confidence = report.confidence; // Assuming IAITagReport has a 'confidence' property
+      const typedReport = report as IAITagReport;
+      const confidence = typedReport.confidence;
 
       if (confidence > 0.9) {
         this.logger.log(`Running high-confidence tool for tag: ${tag}`);
-        this.runHighConfidenceTool(tag, report);
+        this.runHighConfidenceTool(tag, typedReport);
       } else if (confidence > 0.5) {
         this.logger.log(`Running medium-confidence tool for tag: ${tag}`);
-        this.runMediumConfidenceTool(tag, report);
+        this.runMediumConfidenceTool(tag, typedReport);
       } else {
         this.logger.log(`Skipping low-confidence tag: ${tag}`);
       }
     }
   }
 
-  private runHighConfidenceTool(tag: string, report: any) {
+  private runHighConfidenceTool(tag: string, report: IAITagReport) {
     // Implement logic for high-confidence tools
     this.logger.log(`High-confidence tool executed for ${tag}`);
+    this.logger.log(report);
   }
 
-  private runMediumConfidenceTool(tag: string, report: any) {
+  private runMediumConfidenceTool(tag: string, report: IAITagReport) {
     // Implement logic for medium-confidence tools
     this.logger.log(`Medium-confidence tool executed for ${tag}`);
+    this.logger.log(report);
   }
 }

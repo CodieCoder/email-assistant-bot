@@ -6,11 +6,7 @@ export class EmailerService {
 
   constructor() {}
 
-  public async sendEmail(
-    to: string,
-    subject: string,
-    html: string,
-  ): Promise<void> {
+  public sendEmail(to: string, subject: string, html: string): void {
     // Implement your email sending logic here
     // You can use a library like Nodemailer or AWS SES to send emails
     // Example:

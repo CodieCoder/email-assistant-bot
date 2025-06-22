@@ -6,7 +6,7 @@ export class SystemController {
   constructor(private readonly telegramBotService: TelegramBotService) {}
 
   @Post('launch')
-  async launchTelegramWebhook(): Promise<void> {
-    this.telegramBotService.launchWebhook();
+  async launchTelegramWebhook() {
+    await this.telegramBotService.launchWebhook();
   }
 }

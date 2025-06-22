@@ -24,7 +24,7 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Check if the route is public
-    const isPublic = this.reflector.getAllAndOverride(IS_PUBLIC_KEY, [
+    const isPublic: boolean = this.reflector.getAllAndOverride(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -49,7 +49,7 @@ export class AuthGuard implements CanActivate {
       const user: IJwtUserPayload = { id: payload.sub, email: payload.email };
 
       request['user'] = user;
-    } catch (error) {
+    } catch {
       const message = 'Invalid or expired token';
 
       this.logger.log({
